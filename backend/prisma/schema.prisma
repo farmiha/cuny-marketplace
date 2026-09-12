@@ -1,0 +1,128 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Campus {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  emailDomain  String        @unique
+  users        User[]
+  listings     Listing[]
+  visits       CampusVisit[]
+}
+
+model User {
+  id           String     @id // matches Supabase auth.users.id (UUID)
+  email        String     @unique
+  name         String?
+  campus       Campus     @relation(fields: [campusId], references: [id])
+  campusId     Int
+  createdAt    DateTime   @default(now())
+  listings     Listing[]
+  sentMessages Message[]  @relation("SentMessages")
+  recvMessages Message[]  @relation("ReceivedMessages")
+  reportsMade  Report[]   @relation("ReportsMade")
+  reportsOnMe  Report[]   @relation("ReportsReceived")
+  ratingsGiven Rating[]   @relation("RatingsGiven")
+  ratingsRecv  Rating[]   @relation("RatingsReceived")
+  followers    Follow[]   @relation("Following") // people who follow this user
+  following    Follow[]   @relation("Followers")  // people this user follows
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  listings Listing[]
+}
+
+model Listing {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?
+  price       Float
+  condition   String?
+  imageUrl    String?
+  status      String       @default("active") // active, sold, removed
+  seller      User         @relation(fields: [sellerId], references: [id])
+  sellerId    String
+  category    Category     @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+  campus      Campus       @relation(fields: [campusId], references: [id])
+  campusId    Int
+  createdAt   DateTime     @default(now())
+  soldAt      DateTime?    // set when status changes to "sold" — used for avg. listing lifetime
+  messages    Message[]
+  reports     Report[]
+  ratings     Rating[]
+  views       ListingView[]
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  read       Boolean  @default(false) // powers "chats to answer" / unread counts
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  senderId   String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  receiverId String
+  listing    Listing  @relation(fields: [listingId], references: [id])
+  listingId  Int
+  createdAt  DateTime @default(now())
+}
+
+model Report {
+  id         Int      @id @default(autoincrement())
+  reason     String
+  status     String   @default("pending") // pending, reviewed, dismissed
+  reporter   User     @relation("ReportsMade", fields: [reporterId], references: [id])
+  reporterId String
+  reported   User     @relation("ReportsReceived", fields: [reportedId], references: [id])
+  reportedId String
+  listing    Listing? @relation(fields: [listingId], references: [id])
+  listingId  Int?
+  createdAt  DateTime @default(now())
+}
+
+model Rating {
+  id         Int      @id @default(autoincrement())
+  score      Int      // e.g. 1-5
+  comment    String?
+  rater      User     @relation("RatingsGiven", fields: [raterId], references: [id])
+  raterId    String
+  ratee      User     @relation("RatingsReceived", fields: [rateeId], references: [id])
+  rateeId    String
+  listing    Listing? @relation(fields: [listingId], references: [id])
+  listingId  Int?
+  createdAt  DateTime @default(now())
+}
+
+model Follow {
+  id          Int      @id @default(autoincrement())
+  follower    User     @relation("Followers", fields: [followerId], references: [id])
+  followerId  String
+  following   User     @relation("Following", fields: [followingId], references: [id])
+  followingId String
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model ListingView {
+  id        Int      @id @default(autoincrement())
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  listingId Int
+  createdAt DateTime @default(now())
+}
+
+model CampusVisit {
+  id        Int      @id @default(autoincrement())
+  campus    Campus   @relation(fields: [campusId], references: [id])
+  campusId  Int
+  createdAt DateTime @default(now())
+}
