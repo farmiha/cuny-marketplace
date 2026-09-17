@@ -1,47 +1,32 @@
-import { CategoryBadge } from "./CategoryBadge";
-import { PriceBadge } from "./PriceBadge";
+import CategoryBadge from "./CategoryBadge";
+import PriceBadge from "./PriceBadge";
+import { CATEGORY_ICON_PATHS } from "../data/listings";
 
-export function ListingCard({ listing, theme, onClick }) {
+export default function ListingCard({ listing }) {
+  const iconPath = CATEGORY_ICON_PATHS[listing.category] || CATEGORY_ICON_PATHS.Other;
+
   return (
-    <button
-      className="listing-card text-left w-full overflow-hidden"
-      onClick={onClick}
-    >
-      <div
-        className="relative"
-        style={{ height: 210, background: theme.accent }}
-      >
-        <img
-          src={listing.image}
-          alt={listing.title}
-          className="w-full h-full object-cover"
-        />
-
-        <div className="absolute top-3 left-3">
-          <CategoryBadge label={listing.category} theme={theme} />
+    <div className="listing">
+      <div className="thumb">
+        {listing.isNew && <span className="badge-new">JUST IN</span>}
+        <PriceBadge price={listing.price} />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+          <path d={iconPath} />
+        </svg>
+      </div>
+      <div className="listing-body">
+        <CategoryBadge category={listing.category} />
+        <p className="listing-title">{listing.title}</p>
+        <div className="listing-footer">
+          <div className="seller">
+            {listing.seller && <span className="avatar">{listing.seller}</span>}
+            <span className="listing-meta">
+              {listing.condition ? `Condition: ${listing.condition}` : listing.location}
+            </span>
+          </div>
+          <span className="listing-meta">{listing.condition ? listing.location : listing.postedAt}</span>
         </div>
       </div>
-
-      <div className="p-4">
-        <p
-          className="font-semibold text-sm mb-2 leading-snug"
-          style={{ color: "#0d2d6b" }}
-        >
-          {listing.title}
-        </p>
-
-        <div className="flex items-center justify-between">
-          <PriceBadge price={listing.price} theme={theme} />
-
-          <span className="text-xs" style={{ color: "#64748b" }}>
-            {listing.college}
-          </span>
-        </div>
-
-        <p className="text-xs mt-1.5" style={{ color: "#94a3b8" }}>
-          Condition: {listing.condition}
-        </p>
-      </div>
-    </button>
+    </div>
   );
 }

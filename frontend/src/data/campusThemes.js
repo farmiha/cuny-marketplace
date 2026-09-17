@@ -1,75 +1,84 @@
+// Color + copy config for every campus the marketplace supports.
+// `photo` points at a file you drop into /public/campus-photos/ —
+// swap these paths for your real campus images.
 export const CAMPUS_THEMES = {
-  "All CUNY": {
-    name: "All CUNY Colleges",
-    shortName: "CUNY",
-    primary: "#003da5",
-    nav: "#0d2d6b",
-    accent: "#e8f0fe",
-    buttonFrom: "#003da5",
-    buttonTo: "#0052cc",
-    highlight: "#78e6a8",
-    heroBg: "linear-gradient(135deg, #003da5 0%, #0052cc 100%)",
+  all: {
+    key: "all",
+    name: "CUNY",
+    full: "All CUNY",
+    borough: null,
+    primary: "#1E3A73",
+    primaryInk: "#ffffff",
+    accent: "#3FBF8F",
+    accentInk: "#0b2e21",
+    photo: "/campus-photos/all-cuny.jpg",
   },
-
-  "Baruch College": {
-    name: "Baruch College",
-    shortName: "Baruch",
-    primary: "#006747",
-    nav: "#00472f",
-    accent: "#e6f2ee",
-    buttonFrom: "#006747",
-    buttonTo: "#008a5e",
-    highlight: "#a89968",
-    heroBg: "linear-gradient(135deg, #006747 0%, #008a5e 100%)",
+  hunter: {
+    key: "hunter",
+    name: "Hunter",
+    full: "Hunter College",
+    borough: "Manhattan",
+    primary: "#3F0157",
+    primaryInk: "#ffffff",
+    accent: "#FCB827",
+    accentInk: "#2a1a00",
+    photo: "/campus-photos/hunter.jpg",
   },
-
-  "Brooklyn College": {
-    name: "Brooklyn College",
-    shortName: "Brooklyn",
-    primary: "#862334",
-    nav: "#5e1824",
-    accent: "#f5e8eb",
-    buttonFrom: "#862334",
-    buttonTo: "#a82b40",
-    highlight: "#d4af37",
-    heroBg: "linear-gradient(135deg, #862334 0%, #a82b40 100%)",
+  baruch: {
+    key: "baruch",
+    name: "Baruch",
+    full: "Baruch College",
+    borough: "Manhattan",
+    primary: "#05336B",
+    primaryInk: "#ffffff",
+    accent: "#8BB8E8",
+    accentInk: "#05336B",
+    photo: "/campus-photos/baruch.jpg",
   },
-
-  "City College": {
-    name: "City College",
-    shortName: "City",
-    primary: "#003da5",
-    nav: "#002570",
-    accent: "#e8f0fe",
-    buttonFrom: "#003da5",
-    buttonTo: "#0052cc",
-    highlight: "#ffb81c",
-    heroBg: "linear-gradient(135deg, #003da5 0%, #0052cc 100%)",
+  csi: {
+    key: "csi",
+    name: "CSI",
+    full: "College of Staten Island",
+    borough: "Staten Island",
+    primary: "#69B3E7",
+    primaryInk: "#0b2536",
+    accent: "#3E464C",
+    accentInk: "#ffffff",
+    photo: "/campus-photos/csi.jpg",
   },
-
-  "Hunter College": {
-    name: "Hunter College",
-    shortName: "Hunter",
-    primary: "#582c83",
-    nav: "#3d1d5e",
-    accent: "#f0eaf8",
-    buttonFrom: "#582c83",
-    buttonTo: "#7039a8",
-    highlight: "#ffb81c",
-    heroBg: "linear-gradient(135deg, #582c83 0%, #7039a8 100%)",
+  brooklyn: {
+    key: "brooklyn",
+    name: "Brooklyn",
+    full: "Brooklyn College",
+    borough: "Brooklyn",
+    primary: "#861F41",
+    primaryInk: "#ffffff",
+    accent: "#F1C400",
+    accentInk: "#3a2c00",
+    photo: "/campus-photos/brooklyn.jpg",
   },
-
-  "Queens College": {
-    name: "Queens College",
-    shortName: "Queens",
-    primary: "#004b8d",
-    nav: "#003366",
-    accent: "#e6eef6",
-    buttonFrom: "#004b8d",
-    buttonTo: "#0060b3",
-    highlight: "#c8992a",
-    heroBg: "linear-gradient(135deg, #004b8d 0%, #0060b3 100%)",
+  queens: {
+    key: "queens",
+    name: "Queens",
+    full: "Queens College",
+    borough: "Queens",
+    primary: "#CB2C30",
+    primaryInk: "#ffffff",
+    accent: "#78AEE6",
+    accentInk: "#052540",
+    photo: "/campus-photos/queens.jpg",
   },
 };
 
-export const CAMPUS_NAMES = Object.keys(CAMPUS_THEMES);
+// Order used anywhere we render the list of campuses (dropdowns, profile cards, etc.)
+export const CAMPUS_ORDER = ["all", "hunter", "baruch", "csi", "brooklyn", "queens"];
+
+export const CATEGORIES = [
+  "Electronics",
+  "Textbooks",
+  "Furniture",
+  "Sports",
+  "Clothing",
+  "Services",
+  "Other",
+];

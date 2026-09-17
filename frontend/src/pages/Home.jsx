@@ -1,334 +1,87 @@
-const listings = [
-  {
-    id: 1,
-    title: "Graphing Calculator TI-84 Plus",
-    price: 40,
-    category: "Electronics",
-    college: "Baruch College",
-    condition: "Good",
-    image:
-      "https://images.unsplash.com/photo-1648201637025-1c77b9be3013?auto=format&fit=crop&w=600&h=400",
-  },
-  {
-    id: 2,
-    title: "Dell XPS 13 2022 Laptop",
-    price: 650,
-    category: "Electronics",
-    college: "Hunter College",
-    condition: "Like New",
-    image:
-      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&h=400",
-  },
-  {
-    id: 3,
-    title: "IKEA ALEX Desk - White",
-    price: 55,
-    category: "Furniture",
-    college: "Brooklyn College",
-    condition: "Like New",
-    image:
-      "https://images.unsplash.com/photo-1506664453913-f326aa81f54d?auto=format&fit=crop&w=600&h=400",
-  },
-  {
-    id: 4,
-    title: "Sony WH-1000XM4 Headphones",
-    price: 180,
-    category: "Electronics",
-    college: "Queens College",
-    condition: "Good",
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&h=400",
-  },
-  {
-    id: 5,
-    title: "Organic Chemistry Textbook",
-    price: 35,
-    category: "Textbooks",
-    college: "City College",
-    condition: "Good",
-    image:
-      "https://images.unsplash.com/photo-1558021212-51b6ecfa0db9?auto=format&fit=crop&w=600&h=400",
-  },
-  {
-    id: 6,
-    title: "Schwinn Commuter Bike",
-    price: 120,
-    category: "Sports",
-    college: "Lehman College",
-    condition: "Fair",
-    image:
-      "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=600&h=400",
-  },
-];
+import { Link } from "react-router-dom";
+import { useCampusTheme } from "../hooks/useCampusTheme";
+import { CATEGORIES } from "../data/campusThemes";
+import { LISTINGS, CATEGORY_ICON_PATHS } from "../data/listings";
+import ListingCard from "../components/ListingCard";
 
-const categories = [
-  "Electronics",
-  "Textbooks",
-  "Furniture",
-  "Sports",
-  "Clothing",
-  "Services",
-  "Other",
-];
+export default function Home() {
+  const { theme } = useCampusTheme();
+  const latest = LISTINGS.slice(0, 4);
 
-export default function Home({ onNavigate, theme, campus }) {
   return (
-    <div
-      style={{
-        maxWidth: 1152,
-        margin: "0 auto",
-        padding: "32px 24px",
-      }}
-    >
-      <section
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          borderRadius: 16,
-          padding: 32,
-          color: "#ffffff",
-          background: theme.heroBg,
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            opacity: 0.1,
-            backgroundImage:
-              "repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.6) 30px, rgba(255,255,255,0.6) 31px), repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(255,255,255,0.6) 30px, rgba(255,255,255,0.6) 31px)",
-          }}
-        />
-
-        <div style={{ position: "relative" }}>
-          <p
-            style={{
-              margin: "0 0 8px",
-              color: "rgba(255,255,255,0.72)",
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: 1.4,
-              textTransform: "uppercase",
-            }}
-          >
-            CUNY Student Marketplace
-          </p>
-
-          <h1
-            style={{
-              maxWidth: 580,
-              margin: 0,
-              fontSize: "clamp(30px, 5vw, 44px)",
-              lineHeight: 1.1,
-            }}
-          >
-            Buy & sell within your{" "}
-            <span style={{ color: theme.highlight }}>CUNY community.</span>
+    <div className="page" id="page-home">
+      <section className="hero">
+        <div className="hero-photo" aria-hidden="true" />
+        <div className="hero-content">
+          <div className="eyebrow">
+            <span className="dot-pulse" />
+            <span>{theme.full.toUpperCase()} MARKETPLACE</span>
+          </div>
+          <h1>
+            Buy &amp; sell within your <span className="accent-word">{theme.name}</span> community
           </h1>
-
-          <p
-            style={{
-              maxWidth: 560,
-              margin: "16px 0 22px",
-              color: "rgba(255,255,255,0.84)",
-              fontSize: 15,
-              lineHeight: 1.6,
-            }}
-          >
-            Verified students only — textbooks, electronics, furniture, and more.
+          <p className="lede">
+            Textbooks, dorm gear, tickets, tutoring — sell what you don't need, find what you do.
+            Just classmates, no strangers.
           </p>
-
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={() => onNavigate("browse")}
-              style={{
-                border: 0,
-                borderRadius: 8,
-                background: "#ffffff",
-                color: "#003da5",
-                cursor: "pointer",
-                padding: "11px 18px",
-                fontFamily: "inherit",
-                fontWeight: 700,
-              }}
-            >
-              Browse Listings
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onNavigate("post")}
-              style={{
-                border: "1px solid rgba(255,255,255,0.45)",
-                borderRadius: 8,
-                background: "rgba(255,255,255,0.14)",
-                color: "#ffffff",
-                cursor: "pointer",
-                padding: "11px 18px",
-                fontFamily: "inherit",
-                fontWeight: 700,
-              }}
-            >
-              Sell Something
-            </button>
+          <div className="hero-ctas">
+            <Link to="/browse" className="cta-primary">Browse listings</Link>
+            <Link to="/post" className="cta-secondary">Sell something</Link>
           </div>
         </div>
       </section>
 
-      <section
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 8,
-          margin: "28px 0 34px",
-        }}
-      >
-        {categories.map((category) => (
-          <button
-            type="button"
-            key={category}
-            onClick={() => onNavigate("browse")}
-            style={{
-              border: `1px solid ${theme.primary}35`,
-              borderRadius: 999,
-              background: theme.accent,
-              color: theme.primary,
-              cursor: "pointer",
-              padding: "7px 14px",
-              fontFamily: "inherit",
-              fontSize: 13,
-              fontWeight: 700,
-            }}
-          >
-            {category}
-          </button>
+      <div className="trust-strip">
+        <div className="trust-card">
+          <span className="ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 12l2 2 4-4" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+          </span>
+          <p>Verified with your<br />CUNY email</p>
+        </div>
+        <div className="trust-card">
+          <span className="ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 21s-7-4.35-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.65-9.5 9-9.5 9z" />
+            </svg>
+          </span>
+          <p>Free to list,<br />always</p>
+        </div>
+        <div className="trust-card">
+          <span className="ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 21c4.5-2.6 8-6.9 8-11.6A8 8 0 0 0 4 9.4C4 14.1 7.5 18.4 12 21z" />
+            </svg>
+          </span>
+          <p>Meet safely<br />on campus</p>
+        </div>
+      </div>
+
+      <div className="categories">
+        {CATEGORIES.map((cat) => (
+          <a href="#" className="chip" key={cat}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d={CATEGORY_ICON_PATHS[cat]} />
+            </svg>
+            {cat}
+          </a>
         ))}
-      </section>
+      </div>
 
       <section>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 16,
-            marginBottom: 20,
-          }}
-        >
-          <h2 style={{ margin: 0, fontSize: 24 }}>Latest Listings</h2>
-
-          <button
-            type="button"
-            onClick={() => onNavigate("browse")}
-            style={{
-              border: "1px solid #b9cdea",
-              borderRadius: 999,
-              background: "#e8f0fe",
-              color: "#003da5",
-              cursor: "pointer",
-              padding: "7px 14px",
-              fontFamily: "inherit",
-              fontSize: 13,
-              fontWeight: 700,
-            }}
-          >
-            View all
-          </button>
+        <div className="section-head">
+          <div>
+            <h2>Latest listings</h2>
+            <p className="sub">Fresh drops from students near you</p>
+          </div>
+          <Link to="/browse" className="view-all">View all</Link>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gap: 20,
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          }}
-        >
-          {listings.map((listing) => (
-            <article
-              key={listing.id}
-              style={{
-                overflow: "hidden",
-                border: "1px solid #e2e8f0",
-                borderRadius: 12,
-                background: "#ffffff",
-                boxShadow: "0 2px 10px rgba(15, 23, 42, 0.05)",
-              }}
-            >
-              <img
-                src={listing.image}
-                alt={listing.title}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  height: 190,
-                  objectFit: "cover",
-                  background: "#e8f0fe",
-                }}
-              />
-
-              <div style={{ padding: 16 }}>
-                <span
-                  style={{
-                    display: "inline-block",
-                    borderRadius: 999,
-                    background: theme.primary,
-                    color: "#ffffff",
-                    padding: "4px 9px",
-                    fontSize: 11,
-                    fontWeight: 700,
-                  }}
-                >
-                  {listing.category}
-                </span>
-
-                <h3
-                  style={{
-                    margin: "12px 0 10px",
-                    color: "#0d2d6b",
-                    fontSize: 16,
-                  }}
-                >
-                  {listing.title}
-                </h3>
-
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 12,
-                  }}
-                >
-                  <span
-                    style={{
-                      borderRadius: 999,
-                      background: theme.primary,
-                      color: "#ffffff",
-                      padding: "5px 10px",
-                      fontSize: 13,
-                      fontWeight: 700,
-                    }}
-                  >
-                    ${listing.price}
-                  </span>
-
-                  <span style={{ color: "#64748b", fontSize: 12 }}>
-                    {listing.college}
-                  </span>
-                </div>
-
-                <p
-                  style={{
-                    margin: "10px 0 0",
-                    color: "#94a3b8",
-                    fontSize: 12,
-                  }}
-                >
-                  Condition: {listing.condition}
-                </p>
-              </div>
-            </article>
+        <div className="grid">
+          {latest.map((listing) => (
+            <ListingCard key={listing.id} listing={listing} />
           ))}
         </div>
       </section>
