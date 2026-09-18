@@ -1,20 +1,43 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home.jsx";
-import Browse from "./pages/Browse.jsx";
-import Post from "./pages/Post.jsx";
-import Dashboard from "./pages/Dashboard.jsx";
-import About from "./pages/About.jsx";
+import { CampusThemeProvider, useCampusTheme } from "./hooks/useCampusTheme";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import Home from "./pages/Home";
+import Browse from "./pages/Browse";
+import Post from "./pages/Post";
+import AuthPages from "./pages/AuthPages";
+import Dashboard from "./pages/Dashboard";
+import About from "./pages/About";
+
+function AppShell() {
+  const { campus } = useCampusTheme();
+
+  return (
+    <div data-campus={campus}>
+      <Navbar />
+      <main>
+        <div className="wrap">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/browse" element={<Browse />} />
+            <Route path="/post" element={<Post />} />
+            <Route path="/login" element={<AuthPages />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/about" element={<About />} />
+          </Routes>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/browse" element={<Browse />} />
-        <Route path="/post" element={<Post />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/about" element={<About />} />
-      </Routes>
+      <CampusThemeProvider>
+        <AppShell />
+      </CampusThemeProvider>
     </BrowserRouter>
   );
 }
