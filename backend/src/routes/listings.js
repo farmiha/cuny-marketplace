@@ -22,9 +22,64 @@ router.get("/:id", async (req, res) => {
   res.json(listing);
 });
 
-// this creates a new listing from the post a listing page
+// this creates a new listing from the new listing form
 router.post("/", async (req, res) => {
-  const listing = await prisma.listing.create({ data: req.body });
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (!token) {
+    return res.status(401).json({ message: "Not logged in" });
+  }
+
+  // check if this is a real logged in user
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data.user) {
+    return res.status(401).json({ message: "Invalid session" });
+  }
+
+  // pull out the fields we need from the new listing form
+  const {
+    title,
+    price,
+    categoryId,
+    campusId,
+    description,
+    condition,
+    imageUrl,
+    location,
+  } = req.body;
+
+  // check the required fields are actually there
+  if (!title || !price || !categoryId || !campusId) {
+    return res
+      .status(400)
+      .json({ message: "title, price, categoryId, and campusId are required" });
+  }
+
+  // check the category and campus actually exist
+  const category = await prisma.category.findUnique({
+    where: { id: Number(categoryId) },
+  });
+  if (!category) return res.status(404).json({ message: "Category not found" });
+
+  const campus = await prisma.campus.findUnique({
+    where: { id: Number(campusId) },
+  });
+  if (!campus) return res.status(404).json({ message: "Campus not found" });
+
+  // creates the new listing
+  const listing = await prisma.listing.create({
+    data: {
+      title,
+      price,
+      categoryId: category.id,
+      campusId: campus.id,
+      description,
+      condition,
+      imageUrl,
+      location,
+      sellerId: data.user.id,
+    },
+  });
+
   res.status(201).json(listing);
 });
 

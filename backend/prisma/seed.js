@@ -9,6 +9,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function main() {
+  // the 5 schools and their email domain
   const campuses = [
     { name: "Hunter", emailDomain: "stu-mail.hunter.cuny.edu" },
     { name: "Brooklyn", emailDomain: "stu-mail.brooklyn.cuny.edu" },
@@ -17,9 +18,8 @@ async function main() {
     { name: "CSI", emailDomain: "stu-mail.csi.cuny.edu" },
   ];
 
-  // upsert = "update if it exists, otherwise create it"
-  // This loop goes through each campus above and inserts it into the
-  // database, matching on the unique "name" field.
+  // check to see if the campus already exist in the db
+  // if it's not, add it
   for (const campus of campuses) {
     await prisma.campus.upsert({
       where: { name: campus.name },
@@ -28,18 +28,35 @@ async function main() {
     });
   }
 
-  console.log("Seeded campuses:", campuses.map((c) => c.name).join(", "));
+  console.log("Seeded campuses:", campuses.map((c) => c.name).join(", ")); // print a message in console so we know it worked
+
+  // the 5 categories a listing can be filed under
+  const categories = [
+    "Textbooks",
+    "Electronics",
+    "Furniture",
+    "Services",
+    "Other",
+  ];
+
+  for (const name of categories) {
+    // add it if it doesn't already exist, skip it if it does
+    await prisma.category.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
+
+  console.log("Seeded categories:", categories.join(", "));
 }
 
+// runs the function of all work above
 main()
   .catch((e) => {
-    // If anything goes wrong (e.g. bad DB connection), log it and exit
-    // with an error code so it's obvious the seed failed.
     console.error(e);
     process.exit(1);
   })
   .finally(async () => {
-    // Always close the database connection when we're done, whether
-    // the seed succeeded or failed.
     await prisma.$disconnect();
   });
