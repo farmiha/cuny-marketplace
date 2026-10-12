@@ -2,12 +2,15 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCampusTheme } from "../hooks/useCampusTheme";
 import { CATEGORIES } from "../data/campusThemes";
-// import { createListing } from "../lib/apiClient";
+import { supabase } from "../lib/supabaseClient";
+import { apiFetch } from "../lib/apiClient";
 
 export default function Post() {
   const { theme } = useCampusTheme();
   const navigate = useNavigate();
-  const [fileName, setFileName] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     title: "",
     price: "",
@@ -17,20 +20,84 @@ export default function Post() {
     description: "",
   });
 
-  const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const update = (field) => (e) =>
+    setForm((f) => ({ ...f, [field]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Wire this up to lib/apiClient.js or lib/supabaseClient.js once the
-    // backend is ready, e.g. await createListing({ ...form, campus: theme.key });
-    console.log("New listing:", form);
-    navigate("/browse");
+    setError("");
+
+    // you have to be logged in to post
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    const authHeaders = { Authorization: `Bearer ${token}` };
+
+    setSaving(true);
+    try {
+      // the listing goes under the poster's own campus
+      const me = await apiFetch("/auth/me", { headers: authHeaders });
+      if (!me) {
+        setError("Finish signing up before posting a listing.");
+        setSaving(false);
+        return;
+      }
+
+      // upload the image (if there is one) to the listing-images bucket
+      let imageUrl;
+      if (imageFile) {
+        const path = `${data.session.user.id}/${Date.now()}-${imageFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("listing-images")
+          .upload(path, imageFile);
+        if (uploadError) {
+          setError("Image upload failed: " + uploadError.message);
+          setSaving(false);
+          return;
+        }
+        imageUrl = supabase.storage.from("listing-images").getPublicUrl(path)
+          .data.publicUrl;
+      }
+
+      await apiFetch("/listings", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          title: form.title,
+          price: form.price,
+          categoryName: form.category,
+          campusId: me.campusId,
+          location: form.location || undefined,
+          condition: form.condition || undefined,
+          description: form.description || undefined,
+          imageUrl,
+        }),
+      });
+
+      navigate("/browse");
+    } catch (err) {
+      setError(err.message);
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="page" id="page-post">
+    <div
+      className="page"
+      id="page-post"
+      style={{ maxWidth: 640, margin: "0 auto" }}
+    >
       <span className="back-link" onClick={() => navigate("/browse")}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        >
           <path d="M15 18l-6-6 6-6" />
         </svg>
         Back to browse
@@ -64,6 +131,8 @@ export default function Post() {
             <label>Price ($)</label>
             <input
               type="number"
+              min="0.01"
+              step="0.01"
               placeholder="25"
               value={form.price}
               onChange={update("price")}
@@ -73,7 +142,11 @@ export default function Post() {
 
           <div className="field">
             <label>Category</label>
-            <select value={form.category} onChange={update("category")} required>
+            <select
+              value={form.category}
+              onChange={update("category")}
+              required
+            >
               <option value="">Select a category...</option>
               {CATEGORIES.map((c) => (
                 <option key={c}>{c}</option>
@@ -84,16 +157,22 @@ export default function Post() {
           <div className="field">
             <label>Listing Image</label>
             <label className="file-input">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <rect x="3" y="5" width="18" height="14" rx="2" />
                 <circle cx="9" cy="11" r="2" />
                 <path d="M21 16l-5-4-4 3-3-2-6 5" />
               </svg>
-              <span>{fileName || "Choose file — no file chosen"}</span>
+              <span>{imageFile?.name || "Choose file — no file chosen"}</span>
               <input
                 type="file"
+                accept="image/*"
                 style={{ display: "none" }}
-                onChange={(e) => setFileName(e.target.files?.[0]?.name || "")}
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
               />
             </label>
           </div>
@@ -130,7 +209,12 @@ export default function Post() {
           </div>
 
           <div className="field-full">
-            <button type="submit" className="auth-submit">Post Listing</button>
+            {error && (
+              <p style={{ color: "crimson", marginBottom: 10 }}>{error}</p>
+            )}
+            <button type="submit" className="auth-submit" disabled={saving}>
+              {saving ? "Posting..." : "Post Listing"}
+            </button>
           </div>
         </div>
       </form>
