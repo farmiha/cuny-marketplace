@@ -4,9 +4,12 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 async function request(path, options = {}) {
+  // pull headers out so they get merged with Content-Type instead of replacing it
+  const { headers, ...rest } = options;
+
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-    ...options,
+    ...rest,
+    headers: { "Content-Type": "application/json", ...(headers || {}) },
   });
   if (!res.ok) {
     const message = await res.text().catch(() => res.statusText);
@@ -15,6 +18,10 @@ async function request(path, options = {}) {
   const contentType = res.headers.get("content-type") || "";
   return contentType.includes("application/json") ? res.json() : res.text();
 }
+
+// General-purpose call — pass method/headers/body directly.
+// Used by AuthPages.jsx for the signup/login flow.
+export const apiFetch = (path, options = {}) => request(path, options);
 
 export const apiGet = (path) => request(path);
 

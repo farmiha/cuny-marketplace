@@ -1,7 +1,9 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { CAMPUS_ORDER, CAMPUS_THEMES } from "../data/campusThemes";
 import { useCampusTheme } from "../hooks/useCampusTheme";
+import { supabase } from "../lib/supabaseClient";
+import { apiFetch } from "../lib/apiClient";
 
 import LiveMessagesTab from "../components/LiveMessages";
 
@@ -28,6 +30,25 @@ const THREADS = {
   },
 };
 
+// turns "sanila.chowdhury27@stu-mail..." into "Sanila Chowdhury"
+function nameFromEmail(email) {
+  return email
+    .split("@")[0]
+    .replace(/[0-9]/g, "")
+    .split(/[._-]/)
+    .filter(Boolean)
+    .map((part) => part[0].toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+}
+
+// turns "2027-05" into "May 2027"
+function formatGraduation(value) {
+  if (!value) return "";
+  const [year, month] = value.split("-");
+  const date = new Date(Number(year), Number(month) - 1);
+  return date.toLocaleString("en-US", { month: "long", year: "numeric" });
+}
+
 function MessagesTab() {
   const [activeThread, setActiveThread] = useState("maya");
   const thread = THREADS[activeThread];
@@ -35,7 +56,9 @@ function MessagesTab() {
   return (
     <>
       <div className="section-head" style={{ marginBottom: 20 }}>
-        <div><h2>Messages</h2></div>
+        <div>
+          <h2>Messages</h2>
+        </div>
       </div>
       <div className="msg-shell">
         <div className="msg-list">
@@ -58,7 +81,10 @@ function MessagesTab() {
           </div>
           <div className="msg-bubbles">
             {thread.bubbles.map((b, i) => (
-              <div key={i} className={"bubble " + (b.who === "me" ? "me" : "them")}>
+              <div
+                key={i}
+                className={"bubble " + (b.who === "me" ? "me" : "them")}
+              >
                 {b.text}
               </div>
             ))}
@@ -74,20 +100,104 @@ function MessagesTab() {
 }
 
 function ProfileTab() {
+  const navigate = useNavigate();
   const { campus, setCampus } = useCampusTheme();
   const [role, setRole] = useState("buyer");
   const [shopAll, setShopAll] = useState(false);
 
+  // the logged in user's real profile
+  const [profile, setProfile] = useState(null);
+  const [campusName, setCampusName] = useState("");
+  const [status, setStatus] = useState("loading"); // "loading" | "loggedOut" | "error" | "ready"
+
+  useEffect(() => {
+    async function loadProfile() {
+      // check if someone is logged in
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        setStatus("loggedOut");
+        return;
+      }
+
+      try {
+        // get their profile from our backend, and the campus list to find their campus name
+        const [me, campuses] = await Promise.all([
+          apiFetch("/auth/me", {
+            headers: { Authorization: `Bearer ${data.session.access_token}` },
+          }),
+          apiFetch("/campuses"),
+        ]);
+
+        if (!me) {
+          setStatus("error");
+          return;
+        }
+
+        setProfile(me);
+        setCampusName(campuses.find((c) => c.id === me.campusId)?.name || "");
+        setStatus("ready");
+      } catch {
+        setStatus("error");
+      }
+    }
+
+    loadProfile();
+  }, []);
+
+  if (status !== "ready") {
+    return (
+      <>
+        <div className="section-head" style={{ marginBottom: 20 }}>
+          <div>
+            <h2>Profile</h2>
+          </div>
+        </div>
+        {status === "loading" && (
+          <p className="profile-sub">Loading your profile...</p>
+        )}
+        {status === "error" && (
+          <p className="profile-sub">
+            Couldn't load your profile. Try refreshing the page.
+          </p>
+        )}
+        {status === "loggedOut" && (
+          <>
+            <p className="profile-sub">Log in to see your profile.</p>
+            <button
+              className="cta-primary-solid"
+              onClick={() => navigate("/login")}
+            >
+              Log In
+            </button>
+          </>
+        )}
+      </>
+    );
+  }
+
+  const displayName = profile.name || nameFromEmail(profile.email);
+  const graduation = formatGraduation(profile.expectedGraduation);
+  const details = [
+    campusName,
+    profile.year,
+    graduation && `Graduating ${graduation}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <>
       <div className="section-head" style={{ marginBottom: 20 }}>
-        <div><h2>Profile</h2></div>
+        <div>
+          <h2>Profile</h2>
+        </div>
       </div>
       <div className="profile-shell">
         <div className="profile-card">
-          <div className="profile-avatar">S</div>
-          <p className="profile-name">Sam Rivera</p>
-          <p className="profile-email">sam.rivera23@login.cuny.edu</p>
+          <div className="profile-avatar">{displayName[0]}</div>
+          <p className="profile-name">{displayName}</p>
+          <p className="profile-email">{profile.email}</p>
+          <p className="profile-sub">{details}</p>
           <div className="segmented">
             <button
               className={"seg-btn" + (role === "buyer" ? " active" : "")}
@@ -108,7 +218,8 @@ function ProfileTab() {
           <div className="profile-section">
             <h3>Home campus</h3>
             <p className="profile-sub">
-              This determines your default feed and your listings' pickup location.
+              This determines your default feed and your listings' pickup
+              location.
             </p>
             <div className="campus-card-grid">
               {CAMPUS_ORDER.filter((k) => k !== "all").map((key) => {
@@ -116,11 +227,16 @@ function ProfileTab() {
                 return (
                   <div
                     key={key}
-                    className={"campus-pick-card" + (campus === key ? " selected" : "")}
+                    className={
+                      "campus-pick-card" + (campus === key ? " selected" : "")
+                    }
                   >
                     <p className="cp-name">{c.full}</p>
                     <p className="cp-loc">{c.borough}</p>
-                    <button className="cp-select" onClick={() => setCampus(key)}>
+                    <button
+                      className="cp-select"
+                      onClick={() => setCampus(key)}
+                    >
                       Select
                     </button>
                   </div>
@@ -142,14 +258,22 @@ function ProfileTab() {
               >
                 <span className="knob" />
               </button>
-              <span>{shopAll ? "On — showing listings from every campus" : "Off — showing your campus only"}</span>
+              <span>
+                {shopAll
+                  ? "On — showing listings from every campus"
+                  : "Off — showing your campus only"}
+              </span>
             </div>
           </div>
 
           <div className="profile-section">
             <h3>Safety</h3>
-            <p className="profile-sub">Report or block a listing or user any time from their page.</p>
-            <button className="view-all" style={{ borderRadius: 10 }}>Blocked users (0)</button>
+            <p className="profile-sub">
+              Report or block a listing or user any time from their page.
+            </p>
+            <button className="view-all" style={{ borderRadius: 10 }}>
+              Blocked users (0)
+            </button>
           </div>
         </div>
       </div>
