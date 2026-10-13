@@ -1,29 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { LISTINGS } from "../data/listings";
 import { CATEGORIES } from "../data/campusThemes";
 import ListingCard from "../components/ListingCard";
+import { getListings } from "../lib/apiClient";
 
 export default function Browse() {
+  const [listings, setListings] = useState([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All categories");
   const [sort, setSort] = useState("Newest");
 
-    const [allListings, setAllListings] = useState(LISTINGS);
-
+  // get the real listings from the backend when the page loads
   useEffect(() => {
-    const base = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-    fetch(`${base}/listings`)
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => {
-        if (Array.isArray(data) && data.length) setAllListings(data);
-      })
-      .catch(() => {});
+    getListings()
+      .then((data) =>
+        setListings(
+          data.map((l) => ({
+            ...l,
+            price: Number(l.price),
+            category: l.category?.name,
+          })),
+        ),
+      )
+      .catch((err) => console.error("Could not load listings:", err));
   }, []);
 
   const filtered = useMemo(() => {
-        let items = allListings.filter((l) =>
-      l.title.toLowerCase().includes(search.toLowerCase())
+    let items = listings.filter((l) =>
+      l.title.toLowerCase().includes(search.toLowerCase()),
     );
     if (category !== "All categories") {
       items = items.filter((l) => l.category === category);
@@ -34,7 +38,7 @@ export default function Browse() {
       items = [...items].sort((a, b) => b.price - a.price);
     }
     return items;
-    }, [search, category, sort, allListings]);
+  }, [listings, search, category, sort]);
 
   return (
     <div className="page" id="page-browse">
@@ -43,7 +47,11 @@ export default function Browse() {
           <h2>Browse Listings</h2>
           <p className="sub">Filter by search, category, and sort order.</p>
         </div>
-        <Link to="/post" className="cta-primary" style={{ padding: "11px 20px" }}>
+        <Link
+          to="/post"
+          className="cta-primary"
+          style={{ padding: "11px 20px" }}
+        >
           Post a Listing
         </Link>
       </div>

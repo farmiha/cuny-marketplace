@@ -7,6 +7,8 @@ const supabase = require("../supabaseClient");
 router.get("/", async (req, res) => {
   const listings = await prisma.listing.findMany({
     where: { status: "active" },
+    include: { category: true },
+    orderBy: { createdAt: "desc" },
   });
   res.json(listings);
 });
@@ -15,6 +17,12 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   const listing = await prisma.listing.findUnique({
     where: { id: Number(req.params.id) },
+    include: {
+      category: true,
+      campus: true,
+      // only the seller's name goes out, never their email or phone
+      seller: { select: { name: true } },
+    },
   });
 
   if (!listing) return res.status(404).json({ message: "Not found" });
@@ -36,10 +44,12 @@ router.post("/", async (req, res) => {
   }
 
   // pull out the fields we need from the new listing form
+  // the form sends the category name (like "Textbooks"), curl can still send categoryId
   const {
     title,
     price,
     categoryId,
+    categoryName,
     campusId,
     description,
     condition,
@@ -48,16 +58,24 @@ router.post("/", async (req, res) => {
   } = req.body;
 
   // check the required fields are actually there
-  if (!title || !price || !categoryId || !campusId) {
+  if (!title || !price || !(categoryId || categoryName) || !campusId) {
     return res
       .status(400)
-      .json({ message: "title, price, categoryId, and campusId are required" });
+      .json({ message: "title, price, a category, and campusId are required" });
+  }
+
+  // check the price is a real number above 0 (this also turns "25" into 25)
+  const priceNumber = Number(price);
+  if (!Number.isFinite(priceNumber) || priceNumber <= 0) {
+    return res
+      .status(400)
+      .json({ message: "price has to be a number above 0" });
   }
 
   // check the category and campus actually exist
-  const category = await prisma.category.findUnique({
-    where: { id: Number(categoryId) },
-  });
+  const category = categoryId
+    ? await prisma.category.findUnique({ where: { id: Number(categoryId) } })
+    : await prisma.category.findUnique({ where: { name: categoryName } });
   if (!category) return res.status(404).json({ message: "Category not found" });
 
   const campus = await prisma.campus.findUnique({
@@ -65,11 +83,10 @@ router.post("/", async (req, res) => {
   });
   if (!campus) return res.status(404).json({ message: "Campus not found" });
 
-  // creates the new listing
   const listing = await prisma.listing.create({
     data: {
       title,
-      price,
+      price: priceNumber,
       categoryId: category.id,
       campusId: campus.id,
       description,
