@@ -6,8 +6,12 @@ import { CATEGORY_ICON_PATHS } from "../data/listings";
 // hi
 export default function ListingCard({ listing }) {
   const navigate = useNavigate();
-  const iconPath =
-    CATEGORY_ICON_PATHS[listing.category] || CATEGORY_ICON_PATHS.Other;
+  const iconPath = CATEGORY_ICON_PATHS[listing.category] || CATEGORY_ICON_PATHS.Other;
+
+  // the backend sends seller as { name }, the old sample data used a plain string
+  const sellerName =
+    typeof listing.seller === "string" ? listing.seller : listing.seller?.name;
+  const sellerInitial = sellerName ? sellerName.trim().charAt(0).toUpperCase() : "";
 
   return (
     <Link
@@ -40,35 +44,45 @@ export default function ListingCard({ listing }) {
           <CategoryBadge category={listing.category} />
           <p className="listing-title">{listing.title}</p>
           <div className="listing-footer">
-            <div className="seller">
-              {listing.seller && (
-                <span className="avatar">{listing.seller}</span>
-              )}
-              <span className="listing-meta">
-                {listing.condition
-                  ? `Condition: ${listing.condition}`
-                  : listing.location}
-              </span>
-            </div>
+            <span className="listing-meta">
+              {listing.condition
+                ? `Condition: ${listing.condition}`
+                : listing.location}
+            </span>
             <span className="listing-meta">
               {listing.condition ? listing.location : listing.postedAt}
             </span>
           </div>
+
+          {/* who is selling it: initial in a circle and "Sold by name" */}
+          {sellerName && (
+            <div className="seller" style={{ marginTop: 12 }}>
+              <span className="avatar">{sellerInitial}</span>
+              <span className="listing-meta">Sold by {sellerName}</span>
+            </div>
+          )}
+
+          {listing.sellerId && (
+            <button
+              className="cta-primary-solid"
+              style={{
+                marginTop: 14,
+                width: "100%",
+                padding: "10px 0",
+                borderRadius: 10,
+                fontSize: "0.85rem",
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                navigate(
+                  `/dashboard?tab=messages&listingId=${listing.id}&receiverId=${listing.sellerId}`
+                );
+              }}
+            >
+              Message seller
+            </button>
+          )}
         </div>
-        {listing.sellerId && (
-          <button
-            className="cta-primary-solid"
-            style={{ marginTop: 10, width: "100%" }}
-            onClick={(e) => {
-              e.preventDefault();
-              navigate(
-                `/dashboard?tab=messages&listingId=${listing.id}&receiverId=${listing.sellerId}`,
-              );
-            }}
-          >
-            Message seller
-          </button>
-        )}
       </div>
     </Link>
   );
