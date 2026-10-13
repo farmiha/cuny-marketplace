@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Browse from "./pages/Browse";
+import ListingDetail from "./pages/ListingDetail";
 import Post from "./pages/Post";
 import AuthPages from "./pages/AuthPages";
 import Dashboard from "./pages/Dashboard";
@@ -20,6 +21,7 @@ function AppShell() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/browse" element={<Browse />} />
+            <Route path="/listing/:id" element={<ListingDetail />} />
             <Route path="/post" element={<Post />} />
             <Route path="/login" element={<AuthPages />} />
             <Route path="/dashboard" element={<Dashboard />} />

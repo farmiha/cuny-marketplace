@@ -18,21 +18,23 @@ model Campus {
 }
 
 model User {
-  id           String     @id // matches Supabase auth.users.id (UUID)
-  email        String     @unique
-  name         String?
-  campus       Campus     @relation(fields: [campusId], references: [id])
-  campusId     Int
-  createdAt    DateTime   @default(now())
-  listings     Listing[]
-  sentMessages Message[]  @relation("SentMessages")
-  recvMessages Message[]  @relation("ReceivedMessages")
-  reportsMade  Report[]   @relation("ReportsMade")
-  reportsOnMe  Report[]   @relation("ReportsReceived")
-  ratingsGiven Rating[]   @relation("RatingsGiven")
-  ratingsRecv  Rating[]   @relation("RatingsReceived")
-  followers    Follow[]   @relation("Following") // people who follow this user
-  following    Follow[]   @relation("Followers")  // people this user follows
+  id                 String     @id // matches Supabase auth.users.id (UUID)
+  email              String     @unique
+  name               String?
+  year               String?
+  expectedGraduation String?
+  campus             Campus     @relation(fields: [campusId], references: [id])
+  campusId           Int
+  createdAt          DateTime   @default(now())
+  listings           Listing[]
+  sentMessages       Message[]  @relation("SentMessages")
+  recvMessages       Message[]  @relation("ReceivedMessages")
+  reportsMade        Report[]   @relation("ReportsMade")
+  reportsOnMe        Report[]   @relation("ReportsReceived")
+  ratingsGiven       Rating[]   @relation("RatingsGiven")
+  ratingsRecv        Rating[]   @relation("RatingsReceived")
+  followers          Follow[]   @relation("Following")
+  following          Follow[]   @relation("Followers")
 }
 
 model Category {
@@ -42,21 +44,22 @@ model Category {
 }
 
 model Listing {
-  id          Int          @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   title       String
   description String?
   price       Float
   condition   String?
   imageUrl    String?
-  status      String       @default("active") // active, sold, removed
-  seller      User         @relation(fields: [sellerId], references: [id])
+  location    String?       // meetup spot, e.g. "Hunter West, Library, Dorms"
+  status      String        @default("active")
+  seller      User          @relation(fields: [sellerId], references: [id])
   sellerId    String
-  category    Category     @relation(fields: [categoryId], references: [id])
+  category    Category      @relation(fields: [categoryId], references: [id])
   categoryId  Int
-  campus      Campus       @relation(fields: [campusId], references: [id])
+  campus      Campus        @relation(fields: [campusId], references: [id])
   campusId    Int
-  createdAt   DateTime     @default(now())
-  soldAt      DateTime?    // set when status changes to "sold" — used for avg. listing lifetime
+  createdAt   DateTime      @default(now())
+  soldAt      DateTime?
   messages    Message[]
   reports     Report[]
   ratings     Rating[]
@@ -66,7 +69,7 @@ model Listing {
 model Message {
   id         Int      @id @default(autoincrement())
   content    String
-  read       Boolean  @default(false) // powers "chats to answer" / unread counts
+  read       Boolean  @default(false)
   sender     User     @relation("SentMessages", fields: [senderId], references: [id])
   senderId   String
   receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
@@ -79,7 +82,7 @@ model Message {
 model Report {
   id         Int      @id @default(autoincrement())
   reason     String
-  status     String   @default("pending") // pending, reviewed, dismissed
+  status     String   @default("pending")
   reporter   User     @relation("ReportsMade", fields: [reporterId], references: [id])
   reporterId String
   reported   User     @relation("ReportsReceived", fields: [reportedId], references: [id])
@@ -91,7 +94,7 @@ model Report {
 
 model Rating {
   id         Int      @id @default(autoincrement())
-  score      Int      // e.g. 1-5
+  score      Int
   comment    String?
   rater      User     @relation("RatingsGiven", fields: [raterId], references: [id])
   raterId    String
