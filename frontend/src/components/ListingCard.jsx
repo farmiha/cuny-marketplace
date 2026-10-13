@@ -1,11 +1,13 @@
-import { Link } from "react-router-dom";
+
+import { Link, useNavigate } from "react-router-dom";
 import CategoryBadge from "./CategoryBadge";
 import PriceBadge from "./PriceBadge";
 import { CATEGORY_ICON_PATHS } from "../data/listings";
 
+// hi
 export default function ListingCard({ listing }) {
-  const iconPath =
-    CATEGORY_ICON_PATHS[listing.category] || CATEGORY_ICON_PATHS.Other;
+  const navigate = useNavigate();
+  const iconPath = CATEGORY_ICON_PATHS[listing.category] || CATEGORY_ICON_PATHS.Other;
 
   return (
     <Link
@@ -53,6 +55,16 @@ export default function ListingCard({ listing }) {
             </span>
           </div>
         </div>
+        {listing.sellerId && (
+          <button
+            className="cta-primary-solid"
+            style={{ marginTop: 10, width: "100%" }}
+               onClick={(e) => {
+     e.preventDefault();
+     navigate(
+       `/dashboard?tab=messages&listingId=${listing.id}&receiverId=${listing.sellerId}`
+     );
+   }}
       </div>
     </Link>
   );

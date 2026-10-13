@@ -5,6 +5,8 @@ import { useCampusTheme } from "../hooks/useCampusTheme";
 import { supabase } from "../lib/supabaseClient";
 import { apiFetch } from "../lib/apiClient";
 
+import LiveMessagesTab from "../components/LiveMessages";
+
 const THREADS = {
   maya: {
     name: "Maya K.",
@@ -299,7 +301,7 @@ export default function Dashboard() {
           Profile
         </button>
       </div>
-      {tab === "messages" ? <MessagesTab /> : <ProfileTab />}
+      {tab === "messages" ? <LiveMessagesTab fallback={<MessagesTab />} /> : <ProfileTab />}
     </div>
   );
 }
