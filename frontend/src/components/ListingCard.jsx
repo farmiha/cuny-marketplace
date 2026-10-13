@@ -6,12 +6,15 @@ import { CATEGORY_ICON_PATHS } from "../data/listings";
 // hi
 export default function ListingCard({ listing }) {
   const navigate = useNavigate();
-  const iconPath = CATEGORY_ICON_PATHS[listing.category] || CATEGORY_ICON_PATHS.Other;
+  const iconPath =
+    CATEGORY_ICON_PATHS[listing.category] || CATEGORY_ICON_PATHS.Other;
 
   // the backend sends seller as { name }, the old sample data used a plain string
   const sellerName =
     typeof listing.seller === "string" ? listing.seller : listing.seller?.name;
-  const sellerInitial = sellerName ? sellerName.trim().charAt(0).toUpperCase() : "";
+  const sellerInitial = sellerName
+    ? sellerName.trim().charAt(0).toUpperCase()
+    : "";
 
   return (
     <Link
@@ -75,7 +78,7 @@ export default function ListingCard({ listing }) {
               onClick={(e) => {
                 e.preventDefault();
                 navigate(
-                  `/dashboard?tab=messages&listingId=${listing.id}&receiverId=${listing.sellerId}`
+                  `/dashboard?tab=messages&listingId=${listing.id}&receiverId=${listing.sellerId}`,
                 );
               }}
             >
