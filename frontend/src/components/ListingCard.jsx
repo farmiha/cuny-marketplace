@@ -1,8 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import CategoryBadge from "./CategoryBadge";
 import PriceBadge from "./PriceBadge";
 import { CATEGORY_ICON_PATHS } from "../data/listings";
 
+// hi
 export default function ListingCard({ listing }) {
+  const navigate = useNavigate();
   const iconPath = CATEGORY_ICON_PATHS[listing.category] || CATEGORY_ICON_PATHS.Other;
 
   return (
@@ -26,6 +29,19 @@ export default function ListingCard({ listing }) {
           </div>
           <span className="listing-meta">{listing.condition ? listing.location : listing.postedAt}</span>
         </div>
+        {listing.sellerId && (
+          <button
+            className="cta-primary-solid"
+            style={{ marginTop: 10, width: "100%" }}
+            onClick={() =>
+              navigate(
+                `/dashboard?tab=messages&listingId=${listing.id}&receiverId=${listing.sellerId}`
+              )
+            }
+          >
+            Message seller
+          </button>
+        )}
       </div>
     </div>
   );

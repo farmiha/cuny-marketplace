@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { LISTINGS } from "../data/listings";
 import { CATEGORIES } from "../data/campusThemes";
@@ -9,8 +9,20 @@ export default function Browse() {
   const [category, setCategory] = useState("All categories");
   const [sort, setSort] = useState("Newest");
 
+    const [allListings, setAllListings] = useState(LISTINGS);
+
+  useEffect(() => {
+    const base = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+    fetch(`${base}/listings`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data) => {
+        if (Array.isArray(data) && data.length) setAllListings(data);
+      })
+      .catch(() => {});
+  }, []);
+
   const filtered = useMemo(() => {
-    let items = LISTINGS.filter((l) =>
+        let items = allListings.filter((l) =>
       l.title.toLowerCase().includes(search.toLowerCase())
     );
     if (category !== "All categories") {
@@ -22,7 +34,7 @@ export default function Browse() {
       items = [...items].sort((a, b) => b.price - a.price);
     }
     return items;
-  }, [search, category, sort]);
+    }, [search, category, sort, allListings]);
 
   return (
     <div className="page" id="page-browse">
