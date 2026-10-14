@@ -32,6 +32,15 @@ import {
 import ListingDensityMap from '../data/ListingDensityMap'
 import './AnalyticsDashboard.css'
 
+import { supabase } from '../lib/supabaseClient'
+
+console.log('URL:', import.meta.env.VITE_SUPABASE_URL)
+const { data, error, count } = await supabase
+  .from('Listing')
+  .select('*', { count: 'exact' })
+  .limit(3)
+console.log({ data, error, count })
+
 const axisProps = {
   tick: { fill: 'var(--muted)', fontSize: 11 },
   axisLine: false,
@@ -76,65 +85,6 @@ function formatNumber(value) {
   return Number.isFinite(number)
     ? number.toLocaleString()
     : '—'
-}
-
-function DashboardIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      aria-hidden="true"
-    >
-      <rect x="3" y="3" width="7" height="7" rx="1.5" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" />
-    </svg>
-  )
-}
-
-function TagIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      aria-hidden="true"
-    >
-      <path d="M3 10V5a2 2 0 0 1 2-2h5a2 2 0 0 1 1.4.6l8 8a2 2 0 0 1 0 2.8l-5 5a2 2 0 0 1-2.8 0l-8-8A2 2 0 0 1 3 10Z" />
-      <circle cx="7.5" cy="7.5" r="1" />
-    </svg>
-  )
-}
-
-function ModeIcon({ darkMode }) {
-  return (
-    <svg
-      width="23"
-      height="23"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {darkMode ? (
-        <path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z" />
-      ) : (
-        <>
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-        </>
-      )}
-    </svg>
-  )
 }
 
 function StatCard({ label, value, note, accent = false }) {
@@ -190,7 +140,6 @@ export default function AnalyticsDashboard() {
   const [byCategory, setByCategory] = useState([])
 
   const [campusKey, setCampusKey] = useState('all')
-  const [darkMode, setDarkMode] = useState(false)
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -282,7 +231,7 @@ export default function AnalyticsDashboard() {
 
   return (
     <div
-      className={`analytics-app${darkMode ? ' is-dark' : ''}`}
+      className="analytics-app"
       style={{
         '--primary': theme.primary,
         '--primary-ink': theme.primaryInk,
@@ -291,80 +240,6 @@ export default function AnalyticsDashboard() {
         '--primary-soft': `${theme.primary}12`,
       }}
     >
-      <header className="analytics-topbar">
-        <div className="analytics-topbar-inner">
-          <div className="analytics-brand">
-            <div className="analytics-brand-row">
-              <TagIcon />
-
-              <span>
-                CUNY{' '}
-                <span className="analytics-brand-accent">
-                  MarketPlace
-                </span>
-              </span>
-            </div>
-
-            <div className="analytics-brand-underline" />
-          </div>
-
-          <div className="analytics-header-controls">
-            <label className="analytics-campus-picker">
-              <span className="analytics-sr-only">
-                Choose campus and school colors
-              </span>
-
-              <select
-                value={campusKey}
-                onChange={(event) => {
-                  setCampusKey(event.target.value)
-                }}
-              >
-                {CAMPUS_ORDER.map((key) => (
-                  <option key={key} value={key}>
-                    {CAMPUS_THEMES[key].full}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <button
-              type="button"
-              className="analytics-mode-button"
-              aria-label={
-                darkMode
-                  ? 'Switch to light mode'
-                  : 'Switch to dark mode'
-              }
-              aria-pressed={darkMode}
-              onClick={() => {
-                setDarkMode((current) => !current)
-              }}
-            >
-              <ModeIcon darkMode={darkMode} />
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <aside
-        className="analytics-rail"
-        aria-label="Dashboard identity"
-      >
-        <div className="analytics-rail-logo" aria-label="CUNY">
-          CU<br />NY
-        </div>
-
-        <div
-          className="analytics-rail-active"
-          title="Analytics dashboard"
-        >
-          <DashboardIcon />
-        </div>
-
-        <span className="analytics-rail-caption">DATA</span>
-      </aside>
-
       <main className="analytics-workspace">
         <header className="analytics-page-heading">
           <p className="analytics-eyebrow">
@@ -528,7 +403,7 @@ export default function AnalyticsDashboard() {
                       name="Listings"
                       fill="var(--primary)"
                       radius={[5, 5, 0, 0]}
-                      maxBarSize={42}
+                      maxBarSize={56}
                     />
                   </BarChart>
                 </ChartCard>
@@ -571,7 +446,7 @@ export default function AnalyticsDashboard() {
                       name="Students"
                       fill="var(--primary)"
                       radius={[0, 5, 5, 0]}
-                      maxBarSize={22}
+                      maxBarSize={26}
                     />
                   </BarChart>
                 </ChartCard>
@@ -640,10 +515,9 @@ export default function AnalyticsDashboard() {
                 </select>
 
                 <p className="analytics-sidebar-note">
-                  Selecting a campus changes its school colors and
-                  filters the map and two campus charts. Summary
-                  totals, weekly trends, and categories remain
-                  marketplace-wide.
+                  Selecting a campus filters the map and the two
+                  campus charts. Summary totals, weekly trends, and
+                  categories remain marketplace-wide.
                 </p>
 
                 <button
@@ -654,49 +528,6 @@ export default function AnalyticsDashboard() {
                 >
                   Reset campus filter
                 </button>
-              </section>
-
-              <section className="analytics-sidebar-section">
-                <h2>School colors</h2>
-
-                <p className="analytics-sidebar-note">
-                  {theme.full}
-                  {theme.borough ? ` · ${theme.borough}` : ''}
-                </p>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 8,
-                  }}
-                >
-                  <span
-                    style={{
-                      padding: '7px 10px',
-                      borderRadius: 8,
-                      background: theme.primary,
-                      color: theme.primaryInk,
-                      fontSize: 11,
-                      fontWeight: 700,
-                    }}
-                  >
-                    Primary
-                  </span>
-
-                  <span
-                    style={{
-                      padding: '7px 10px',
-                      borderRadius: 8,
-                      background: theme.accent,
-                      color: theme.accentInk,
-                      fontSize: 11,
-                      fontWeight: 700,
-                    }}
-                  >
-                    Accent
-                  </span>
-                </div>
               </section>
 
               <section className="analytics-sidebar-section">
