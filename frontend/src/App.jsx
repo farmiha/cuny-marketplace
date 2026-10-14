@@ -9,6 +9,7 @@ import Post from "./pages/Post";
 import AuthPages from "./pages/AuthPages";
 import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
+import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 
 function AppShell() {
   const { campus } = useCampusTheme();
@@ -26,6 +27,7 @@ function AppShell() {
             <Route path="/login" element={<AuthPages />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/about" element={<About />} />
+            <Route path="/analytics" element={<AnalyticsDashboard />} />
           </Routes>
         </div>
       </main>
