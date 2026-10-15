@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiGet, apiFetch } from "../lib/apiClient";
 import { supabase } from "../lib/supabaseClient";
+import { useCart } from "../hooks/useCart";
 
 export default function ListingDetail() {
   const { id } = useParams();
@@ -12,6 +13,9 @@ export default function ListingDetail() {
   const [deleting, setDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
+  const { cart, addToCart } = useCart();
+  const [adding, setAdding] = useState(false);
+  const [cartError, setCartError] = useState("");
 
   // find out who is logged in, so we only show Delete on your own listing
   useEffect(() => {
@@ -35,6 +39,23 @@ export default function ListingDetail() {
       setError(err.message);
       setDeleting(false);
       setShowConfirm(false);
+    }
+  }
+
+  // this puts the listing in the buyer's cart
+  async function handleAddToCart() {
+    if (!myId) {
+      navigate("/login");
+      return;
+    }
+    setAdding(true);
+    setCartError("");
+    try {
+      await addToCart(listing.id);
+    } catch (err) {
+      setCartError(err.message);
+    } finally {
+      setAdding(false);
     }
   }
 
@@ -78,6 +99,10 @@ export default function ListingDetail() {
     );
   }
 
+  const inCart = [...cart.groups.flatMap((g) => g.items), ...cart.saved].some(
+    (i) => i.listingId === listing.id,
+  );
+
   return (
     <div className="page">
       {backLink}
@@ -114,6 +139,33 @@ export default function ListingDetail() {
 
           {listing.description && (
             <p style={{ marginTop: 16 }}>{listing.description}</p>
+          )}
+
+          {/* everyone except the seller can add it to their cart */}
+          {myId !== listing.sellerId && listing.status === "active" && (
+            <div style={{ marginTop: 24 }}>
+              {cartError && (
+                <p style={{ color: "crimson", marginBottom: 10 }}>{cartError}</p>
+              )}
+              {inCart ? (
+                <button
+                  className="cta-primary-solid"
+                  style={{ padding: "12px 24px", borderRadius: 10 }}
+                  onClick={() => navigate("/cart")}
+                >
+                  In your cart. View cart
+                </button>
+              ) : (
+                <button
+                  className="cta-primary-solid"
+                  style={{ padding: "12px 24px", borderRadius: 10 }}
+                  onClick={handleAddToCart}
+                  disabled={adding}
+                >
+                  {adding ? "Adding..." : "Add to cart"}
+                </button>
+              )}
+            </div>
           )}
 
           {/* only the person who posted it sees the delete button */}

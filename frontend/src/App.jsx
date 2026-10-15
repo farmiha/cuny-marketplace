@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CampusThemeProvider, useCampusTheme } from "./hooks/useCampusTheme";
+import { CartProvider } from "./hooks/useCart";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -9,6 +10,9 @@ import Post from "./pages/Post";
 import AuthPages from "./pages/AuthPages";
 import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import OrderConfirmation from "./pages/OrderConfirmation";
 
 function AppShell() {
   const { campus } = useCampusTheme();
@@ -26,6 +30,12 @@ function AppShell() {
             <Route path="/login" element={<AuthPages />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/about" element={<About />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route
+              path="/order/:orderId/confirmation"
+              element={<OrderConfirmation />}
+            />
           </Routes>
         </div>
       </main>
@@ -38,7 +48,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <CampusThemeProvider>
-        <AppShell />
+        <CartProvider>
+          <AppShell />
+        </CartProvider>
       </CampusThemeProvider>
     </BrowserRouter>
   );
