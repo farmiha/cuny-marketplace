@@ -23,6 +23,7 @@ model User {
   name               String?
   year               String?
   expectedGraduation String?
+  backupEmail        String?    @unique // personal email for recovery after the stu-mail stops working
   campus             Campus     @relation(fields: [campusId], references: [id])
   campusId           Int
   createdAt          DateTime   @default(now())
