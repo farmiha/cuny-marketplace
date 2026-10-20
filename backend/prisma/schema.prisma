@@ -35,6 +35,8 @@ model User {
   ratingsRecv        Rating[]   @relation("RatingsReceived")
   followers          Follow[]   @relation("Following")
   following          Follow[]   @relation("Followers")
+  cartItems          CartItem[]
+  orders             Order[]
 }
 
 model Category {
@@ -64,6 +66,8 @@ model Listing {
   reports     Report[]
   ratings     Rating[]
   views       ListingView[]
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
 }
 
 model Message {
@@ -128,4 +132,45 @@ model CampusVisit {
   campus    Campus   @relation(fields: [campusId], references: [id])
   campusId  Int
   createdAt DateTime @default(now())
+}
+
+// ---------- cart & checkout ----------
+
+model CartItem {
+  id            Int      @id @default(autoincrement())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  listing       Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId     Int
+  savedForLater Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  // every listing is a one-off item, so it can only be in a cart once
+  @@unique([userId, listingId])
+}
+
+model Order {
+  id                    Int         @id @default(autoincrement())
+  buyer                 User        @relation(fields: [buyerId], references: [id])
+  buyerId               String
+  subtotalCents         Int
+  discountCents         Int         @default(0)
+  totalCents            Int
+  promoCode             String?
+  status                String      @default("pending") // pending | paid | canceled
+  stripePaymentIntentId String?     @unique
+  createdAt             DateTime    @default(now())
+  paidAt                DateTime?
+  items                 OrderItem[]
+}
+
+model OrderItem {
+  id         Int     @id @default(autoincrement())
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId    Int
+  listing    Listing @relation(fields: [listingId], references: [id])
+  listingId  Int
+  sellerId   String
+  title      String  // copied at purchase time so the receipt never changes
+  priceCents Int
 }

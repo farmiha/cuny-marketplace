@@ -4,9 +4,11 @@ import Logo from "./Logo";
 import CampusSwitcher from "./CampusSwitcher";
 import { useCampusTheme } from "../hooks/useCampusTheme";
 import { supabase } from "../lib/supabaseClient";
+import { useCart } from "../hooks/useCart";
 
 export default function Navbar() {
   const { mode, toggleMode } = useCampusTheme();
+  const { count: cartCount } = useCart();
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
 
@@ -84,6 +86,26 @@ export default function Navbar() {
               </svg>
             )}
           </button>
+
+          {/* cart button with the number of items in it */}
+          <NavLink
+            to="/cart"
+            className="icon-btn cart-nav"
+            aria-label={`Cart, ${cartCount} items`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M6 8h12l-1 12H7L6 8z" />
+              <path d="M9 8a3 3 0 0 1 6 0" />
+            </svg>
+            {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+          </NavLink>
 
           {session ? (
             <button className="btn-login" onClick={handleSignOut}>
