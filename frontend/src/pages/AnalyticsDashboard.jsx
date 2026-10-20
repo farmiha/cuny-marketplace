@@ -16,13 +16,8 @@ import {
   Legend,
 } from 'recharts'
 
-import {
-  getStudentsPerCampus,
-  getListingsPerCampus,
-  getListingsLast14Days,
-  getListingsByCategory,
-  getSummaryStats,
-} from '../lib/analyticsApi'
+import { getAnalytics } from '../lib/analyticsBackend'
+import { supabase } from '../lib/supabaseClient'
 
 import {
   CAMPUS_THEMES,
@@ -32,14 +27,7 @@ import {
 import ListingDensityMap from '../data/ListingDensityMap'
 import './AnalyticsDashboard.css'
 
-import { supabase } from '../lib/supabaseClient'
-
-console.log('URL:', import.meta.env.VITE_SUPABASE_URL)
-const { data, error, count } = await supabase
-  .from('Listing')
-  .select('*', { count: 'exact' })
-  .limit(3)
-console.log({ data, error, count })
+const REFRESH_MS = 20000
 
 const axisProps = {
   tick: { fill: 'var(--muted)', fontSize: 11 },
@@ -159,35 +147,21 @@ export default function AnalyticsDashboard() {
 
   useEffect(() => {
     let active = true
+    let debounce = null
 
     async function loadData() {
       try {
-        const [
-          summary,
-          students,
-          listings,
-          trend,
-          categories,
-        ] = await Promise.all([
-          getSummaryStats(),
-          getStudentsPerCampus(),
-          getListingsPerCampus(),
-          getListingsLast14Days(),
-          getListingsByCategory(),
-        ])
+        const data = await getAnalytics()
 
         if (!active) return
 
-        if (!summary) {
-          throw new Error('Summary data was not returned.')
-        }
-
-        setStats(summary)
-        setStudentsPerCampus(students ?? [])
-        setListingsPerCampus(listings ?? [])
-        setLast14Days(trend ?? [])
-        setByCategory(categories ?? [])
+        setStats(data.summary)
+        setStudentsPerCampus(data.studentsPerCampus)
+        setListingsPerCampus(data.listingsPerCampus)
+        setLast14Days(data.last14Days)
+        setByCategory(data.byCategory)
         setLoadedAt(new Date())
+        setError(null)
       } catch (err) {
         if (!active) return
 
@@ -203,10 +177,29 @@ export default function AnalyticsDashboard() {
       }
     }
 
+    function scheduleRefresh() {
+      clearTimeout(debounce)
+      debounce = setTimeout(loadData, 400)
+    }
+
     loadData()
+
+    const channel = supabase
+      .channel(`analytics-dashboard-${Math.random().toString(36).slice(2)}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'Listing' },
+        scheduleRefresh,
+      )
+      .subscribe((status) => console.log('realtime:', status))
+
+    const timer = setInterval(loadData, REFRESH_MS)
 
     return () => {
       active = false
+      clearTimeout(debounce)
+      clearInterval(timer)
+      supabase.removeChannel(channel)
     }
   }, [])
 
@@ -261,7 +254,7 @@ export default function AnalyticsDashboard() {
           >
             Loading analytics…
           </div>
-        ) : error ? (
+        ) : error && !stats ? (
           <div
             className="analytics-card analytics-message"
             role="alert"
@@ -553,13 +546,14 @@ export default function AnalyticsDashboard() {
                 <h2>Snapshot</h2>
 
                 <p className="analytics-sidebar-note">
-                  Charts loaded at{' '}
+                  Last updated at{' '}
                   {loadedAt?.toLocaleTimeString([], {
                     hour: '2-digit',
                     minute: '2-digit',
+                    second: '2-digit',
                   })}.
-                  {' '}Reload the page to refresh charts.
-                  The map refreshes separately.
+                  {' '}Charts refresh automatically when listings are
+                  posted or deleted, and re-check every 20 seconds.
                 </p>
               </section>
             </aside>
