@@ -13,6 +13,7 @@ import About from "./pages/About";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
+import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 
 function AppShell() {
   const { campus } = useCampusTheme();
@@ -36,6 +37,7 @@ function AppShell() {
               path="/order/:orderId/confirmation"
               element={<OrderConfirmation />}
             />
+            <Route path="/analytics" element={<AnalyticsDashboard />} />
           </Routes>
         </div>
       </main>

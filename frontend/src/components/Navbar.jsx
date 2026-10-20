@@ -18,8 +18,7 @@ export default function Navbar() {
       setSession(data.session);
     });
 
-    // Keep this in sync automatically after sign in / sign out,
-    // without needing to refresh the page
+    // Keep this in sync automatically after sign in / sign out without refreshing the page
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, newSession) => {
         setSession(newSession);
@@ -56,6 +55,9 @@ export default function Navbar() {
           </NavLink>
           <NavLink to="/dashboard?tab=profile" className={navLinkClass}>
             Profile
+          </NavLink>
+          <NavLink to="/analytics" className={navLinkClass}>
+            Dashboard
           </NavLink>
         </nav>
 
