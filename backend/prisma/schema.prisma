@@ -38,6 +38,18 @@ model User {
   following          Follow[]   @relation("Followers")
   cartItems          CartItem[]
   orders             Order[]
+  postLogs           ListingPostLog[]
+}
+
+// one row every time someone posts a listing, used for the daily posting limit.
+// It is separate from Listing so deleting a listing doesn't reset the count.
+model ListingPostLog {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model Category {

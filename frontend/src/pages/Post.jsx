@@ -1,9 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCampusTheme } from "../hooks/useCampusTheme";
 import { CATEGORIES } from "../data/campusThemes";
 import { supabase } from "../lib/supabaseClient";
 import { apiFetch } from "../lib/apiClient";
+
+// turns a date into "10/21/2026 at 7:42 PM" in the person's own time zone
+function formatNextPost(iso) {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  });
+  const time = d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return `${date} at ${time}`;
+}
 
 export default function Post() {
   const { theme } = useCampusTheme();
@@ -11,6 +26,7 @@ export default function Post() {
   const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [limitInfo, setLimitInfo] = useState(null); // set when they hit the daily posting limit
   const [form, setForm] = useState({
     title: "",
     price: "",
@@ -19,6 +35,24 @@ export default function Post() {
     condition: "",
     description: "",
   });
+
+  // if they already hit the limit, tell them right away instead of after filling the form
+  useEffect(() => {
+    async function checkLimit() {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) return;
+      try {
+        const info = await apiFetch("/listings/me/limit", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (info.reached) setLimitInfo(info);
+      } catch {
+        // if this check fails, the backend still blocks the post when they submit
+      }
+    }
+    checkLimit();
+  }, []);
 
   const update = (field) => (e) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -38,6 +72,16 @@ export default function Post() {
 
     setSaving(true);
     try {
+      // check the limit before uploading the image, so nothing gets uploaded for nothing
+      const limit = await apiFetch("/listings/me/limit", {
+        headers: authHeaders,
+      });
+      if (limit.reached) {
+        setLimitInfo(limit);
+        setSaving(false);
+        return;
+      }
+
       // the listing goes under the poster's own campus
       const me = await apiFetch("/auth/me", { headers: authHeaders });
       if (!me) {
@@ -79,7 +123,19 @@ export default function Post() {
 
       navigate("/browse");
     } catch (err) {
-      setError(err.message);
+      // the backend says 429 when the daily limit is hit
+      const limitMatch = err.message.match(/^API error 429: ([\s\S]*)$/);
+      if (limitMatch) {
+        let info = {};
+        try {
+          info = JSON.parse(limitMatch[1]);
+        } catch {
+          // keep going with an empty object
+        }
+        setLimitInfo(info);
+      } else {
+        setError(err.message);
+      }
       setSaving(false);
     }
   };
@@ -218,6 +274,52 @@ export default function Post() {
           </div>
         </div>
       </form>
+
+      {/* popup when they reach the daily posting limit */}
+      {limitInfo && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: 16,
+          }}
+          onClick={() => setLimitInfo(null)}
+        >
+          <div
+            style={{
+              background: "#fff",
+              color: "#1a1a1a",
+              borderRadius: 16,
+              padding: 28,
+              maxWidth: 420,
+              width: "100%",
+              textAlign: "center",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: "0 0 10px" }}>You reached your limit</h3>
+            <p style={{ margin: "0 0 6px" }}>
+              You can post up to 5 listings per day. Try again in 24 hours.
+            </p>
+            {limitInfo.nextPostAt && (
+              <p style={{ margin: "0 0 20px", color: "#555" }}>
+                You can post again on {formatNextPost(limitInfo.nextPostAt)}.
+              </p>
+            )}
+            <button
+              className="cta-primary-solid"
+              onClick={() => setLimitInfo(null)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

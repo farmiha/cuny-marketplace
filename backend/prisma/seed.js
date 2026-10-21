@@ -9,7 +9,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function main() {
-  // the 5 schools and their email domain
+  // Campuses — each needs a unique "emailDomain" for signup verification.
   const campuses = [
     { name: "Hunter", emailDomain: "stu-mail.hunter.cuny.edu" },
     { name: "Brooklyn", emailDomain: "stu-mail.brooklyn.cuny.edu" },
@@ -18,8 +18,6 @@ async function main() {
     { name: "CSI", emailDomain: "stu-mail.csi.cuny.edu" },
   ];
 
-  // check to see if the campus already exist in the db
-  // if it's not, add it
   for (const campus of campuses) {
     await prisma.campus.upsert({
       where: { name: campus.name },
@@ -28,19 +26,22 @@ async function main() {
     });
   }
 
-  console.log("Seeded campuses:", campuses.map((c) => c.name).join(", ")); // print a message in console so we know it worked
+  console.log("Seeded campuses:", campuses.map((c) => c.name).join(", "));
 
-  // the 5 categories a listing can be filed under
+  // Categories — these are what a listing gets filed under on Browse.
+  // This list has to match CATEGORIES in frontend/src/data/campusThemes.js,
+  // or posting a listing in a missing category fails with "Category not found".
   const categories = [
-    "Textbooks",
     "Electronics",
+    "Textbooks",
     "Furniture",
+    "Sports",
+    "Clothing",
     "Services",
     "Other",
   ];
 
   for (const name of categories) {
-    // add it if it doesn't already exist, skip it if it does
     await prisma.category.upsert({
       where: { name },
       update: {},
@@ -51,7 +52,6 @@ async function main() {
   console.log("Seeded categories:", categories.join(", "));
 }
 
-// runs the function of all work above
 main()
   .catch((e) => {
     console.error(e);

@@ -3,6 +3,34 @@ const router = express.Router();
 const prisma = require("../prismaClient");
 const supabase = require("../supabaseClient");
 
+// how many listings one person can post in a rolling 24 hours
+const DAILY_LIMIT = 5;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// works out if this user has used up their posts for the day, and if so when they can post again
+async function getPostingLimit(userId) {
+  // we count from the post log (not the listings table), so deleting a listing
+  // doesn't give the person a free slot back
+  const recent = await prisma.listingPostLog.findMany({
+    where: { userId, createdAt: { gte: new Date(Date.now() - DAY_MS) } },
+    orderBy: { createdAt: "asc" },
+    select: { createdAt: true },
+  });
+
+  if (recent.length < DAILY_LIMIT) {
+    return { reached: false, remaining: DAILY_LIMIT - recent.length };
+  }
+
+  // they can post again once the oldest of their last 5 listings is 24 hours old
+  const blocking = recent[recent.length - DAILY_LIMIT];
+  return {
+    reached: true,
+    remaining: 0,
+    limit: DAILY_LIMIT,
+    nextPostAt: new Date(blocking.createdAt.getTime() + DAY_MS),
+  };
+}
+
 // this gets every listing that's currently active in browsing page
 router.get("/", async (req, res) => {
   const listings = await prisma.listing.findMany({
@@ -15,6 +43,22 @@ router.get("/", async (req, res) => {
     orderBy: { createdAt: "desc" },
   });
   res.json(listings);
+});
+
+// this tells the logged in user if they have hit the daily posting limit
+// (it has to stay above "/:id" or "me" would be read as a listing id)
+router.get("/me/limit", async (req, res) => {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (!token) {
+    return res.status(401).json({ message: "Not logged in" });
+  }
+
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data.user) {
+    return res.status(401).json({ message: "Invalid session" });
+  }
+
+  res.json(await getPostingLimit(data.user.id));
 });
 
 // this gets one listing by its id, for the listing detail page
@@ -45,6 +89,15 @@ router.post("/", async (req, res) => {
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data.user) {
     return res.status(401).json({ message: "Invalid session" });
+  }
+
+  // stop people who already posted 5 listings in the last 24 hours
+  const limit = await getPostingLimit(data.user.id);
+  if (limit.reached) {
+    return res.status(429).json({
+      message: "You reached your limit, try again in 24 hours",
+      nextPostAt: limit.nextPostAt,
+    });
   }
 
   // pull out the fields we need from the new listing form
@@ -87,19 +140,23 @@ router.post("/", async (req, res) => {
   });
   if (!campus) return res.status(404).json({ message: "Campus not found" });
 
-  const listing = await prisma.listing.create({
-    data: {
-      title,
-      price: priceNumber,
-      categoryId: category.id,
-      campusId: campus.id,
-      description,
-      condition,
-      imageUrl,
-      location,
-      sellerId: data.user.id,
-    },
-  });
+  // save the listing and write it in the post log together, so they always match
+  const [listing] = await prisma.$transaction([
+    prisma.listing.create({
+      data: {
+        title,
+        price: priceNumber,
+        categoryId: category.id,
+        campusId: campus.id,
+        description,
+        condition,
+        imageUrl,
+        location,
+        sellerId: data.user.id,
+      },
+    }),
+    prisma.listingPostLog.create({ data: { userId: data.user.id } }),
+  ]);
 
   res.status(201).json(listing);
 });
