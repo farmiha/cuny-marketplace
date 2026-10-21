@@ -6,6 +6,8 @@ import { supabase } from './supabaseClient'
 // User:     id, campusId, createdAt
 // Listing:  id, title, campusId, categoryId, createdAt, status
 
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+
 function queryError(table, error) {
   const code = error.code ? ` [${error.code}]` : ''
 
@@ -78,26 +80,19 @@ async function fetchAllRows(
 }
 
 async function getCampuses() {
-  const campuses = await fetchAllRows(
-    'Campus',
-    'id, name',
-  )
+  const campuses = await fetchAllRows('Campus', 'id, name')
 
   return campuses.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 async function getCategories() {
-  const categories = await fetchAllRows(
-    'Category',
-    'id, name',
-  )
+  const categories = await fetchAllRows('Category', 'id, name')
 
   return categories.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 // ---------------------------------------------------------------------------
 // Chart 1: registered users per campus
-// Keep the old function name so AnalyticsDashboard.jsx does not need rewriting.
 // ---------------------------------------------------------------------------
 
 export async function getStudentsPerCampus() {
@@ -105,9 +100,7 @@ export async function getStudentsPerCampus() {
 
   const counts = await Promise.all(
     campuses.map((campus) =>
-      countRows('User', (query) =>
-        query.eq('campusId', campus.id),
-      ),
+      countRows('User', (query) => query.eq('campusId', campus.id)),
     ),
   )
 
@@ -121,7 +114,6 @@ export async function getStudentsPerCampus() {
 
 // ---------------------------------------------------------------------------
 // Chart 2: listings per campus
-// Includes all listing statuses, matching the original dashboard's scope.
 // ---------------------------------------------------------------------------
 
 export async function getListingsPerCampus() {
@@ -129,9 +121,7 @@ export async function getListingsPerCampus() {
 
   const counts = await Promise.all(
     campuses.map((campus) =>
-      countRows('Listing', (query) =>
-        query.eq('campusId', campus.id),
-      ),
+      countRows('Listing', (query) => query.eq('campusId', campus.id)),
     ),
   )
 
@@ -187,7 +177,6 @@ export async function getListingsLast14Days() {
 
 // ---------------------------------------------------------------------------
 // Chart 4: listings by category
-// Reads the real category names instead of using the dummy category list.
 // ---------------------------------------------------------------------------
 
 export async function getListingsByCategory() {
@@ -218,9 +207,7 @@ export async function getSummaryStats() {
     await Promise.all([
       countRows('Listing'),
       countRows('User'),
-      countRows('Listing', (query) =>
-        query.gte('createdAt', weekStart),
-      ),
+      countRows('Listing', (query) => query.gte('createdAt', weekStart)),
     ])
 
   return {
@@ -231,34 +218,39 @@ export async function getSummaryStats() {
 }
 
 // ---------------------------------------------------------------------------
-// Map: convert the shared schema into the shape ListingDensityMap already uses.
-// Do not fetch user names, emails, or seller locations.
+// Map: reads from the backend API (Prisma), not Supabase directly.
+// Returns the shape ListingDensityMap already uses.
+// Does not expose seller names, emails, or seller locations.
 // ---------------------------------------------------------------------------
 
 export async function getMapListings() {
-  const [listings, campuses, categories] = await Promise.all([
-    fetchAllRows(
-      'Listing',
-      'id, title, campusId, categoryId, createdAt, status',
-    ),
-    getCampuses(),
-    getCategories(),
+  const [listingsRes, campusesRes] = await Promise.all([
+    fetch(`${API_URL}/listings`),
+    fetch(`${API_URL}/campuses`),
+  ])
+
+  if (!listingsRes.ok) {
+    throw new Error(`/listings failed: ${listingsRes.status}`)
+  }
+
+  if (!campusesRes.ok) {
+    throw new Error(`/campuses failed: ${campusesRes.status}`)
+  }
+
+  const [listings, campuses] = await Promise.all([
+    listingsRes.json(),
+    campusesRes.json(),
   ])
 
   const campusNames = new Map(
     campuses.map((campus) => [campus.id, campus.name]),
   )
 
-  const categoryNames = new Map(
-    categories.map((category) => [category.id, category.name]),
-  )
-
   return listings.map((listing) => ({
     id: listing.id,
     title: listing.title,
     campus: campusNames.get(listing.campusId) ?? '',
-    category:
-      categoryNames.get(listing.categoryId) ?? 'Unknown category',
+    category: listing.category?.name ?? 'Unknown category',
     created_at: listing.createdAt,
     status: listing.status,
   }))
