@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import Logo from "./Logo";
@@ -5,10 +6,12 @@ import CampusSwitcher from "./CampusSwitcher";
 import { useCampusTheme } from "../hooks/useCampusTheme";
 import { supabase } from "../lib/supabaseClient";
 import { useCart } from "../hooks/useCart";
+import { useUnread } from "./MessageAlerts";
 
 export default function Navbar() {
   const { mode, toggleMode } = useCampusTheme();
   const { count: cartCount } = useCart();
+  const unread = useUnread();
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
 
@@ -51,7 +54,7 @@ export default function Navbar() {
             Browse
           </NavLink>
           <NavLink to="/dashboard?tab=messages" className={navLinkClass}>
-            Messages
+            Messages{unread > 0 && ` (${unread > 9 ? "9+" : unread})`}
           </NavLink>
           <NavLink to="/dashboard?tab=profile" className={navLinkClass}>
             Profile

@@ -4,6 +4,7 @@ import { CAMPUS_ORDER, CAMPUS_THEMES } from "../data/campusThemes";
 import { useCampusTheme } from "../hooks/useCampusTheme";
 import { supabase } from "../lib/supabaseClient";
 import { apiFetch } from "../lib/apiClient";
+import { useUnread } from "../components/MessageAlerts";
 
 import LiveMessagesTab from "../components/LiveMessages";
 
@@ -284,6 +285,7 @@ function ProfileTab() {
 export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") === "profile" ? "profile" : "messages";
+  const unread = useUnread();
 
   return (
     <div className="page" id="page-dashboard">
@@ -292,7 +294,7 @@ export default function Dashboard() {
           className={"seg-btn" + (tab === "messages" ? " active" : "")}
           onClick={() => setSearchParams({ tab: "messages" })}
         >
-          Messages
+          Messages{unread > 0 && ` (${unread > 9 ? "9+" : unread})`}
         </button>
         <button
           className={"seg-btn" + (tab === "profile" ? " active" : "")}

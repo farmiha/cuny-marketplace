@@ -50,18 +50,28 @@ module.exports = function registerChatSockets(io) {
           return ack?.({ error: "Messages must be between a buyer and the seller" });
         }
 
-        const message = await prisma.message.create({
+        const created = await prisma.message.create({
           data: {
             content: text,
             senderId: socket.userId,
             receiverId,
             listingId: listing.id,
           },
+          include: { sender: { select: { name: true, email: true } } },
         });
 
+        // the message, plus the sender's name and listing title for the alert popup
+        // (the sender's email is never sent, only a name)
+        const { sender, ...message } = created;
+        const alertPayload = {
+          ...message,
+          senderName: sender.name || sender.email.split("@")[0],
+          listingTitle: listing.title,
+        };
+
         // Deliver to the receiver and back to the sender's own devices
-        io.to(`user:${receiverId}`).emit("new_message", message);
-        io.to(`user:${socket.userId}`).emit("new_message", message);
+        io.to(`user:${receiverId}`).emit("new_message", alertPayload);
+        io.to(`user:${socket.userId}`).emit("new_message", alertPayload);
 
         ack?.({ ok: true, message });
       } catch (err) {

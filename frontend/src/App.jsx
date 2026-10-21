@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CampusThemeProvider, useCampusTheme } from "./hooks/useCampusTheme";
 import { CartProvider } from "./hooks/useCart";
+import { MessageAlertsProvider } from "./components/MessageAlerts";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -51,7 +52,9 @@ export default function App() {
     <BrowserRouter>
       <CampusThemeProvider>
         <CartProvider>
-          <AppShell />
+          <MessageAlertsProvider>
+            <AppShell />
+          </MessageAlertsProvider>
         </CartProvider>
       </CampusThemeProvider>
     </BrowserRouter>

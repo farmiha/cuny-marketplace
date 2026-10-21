@@ -1,7 +1,16 @@
+
 const express = require("express");
 const router = express.Router();
 const prisma = require("../prismaClient");
 const requireAuth = require("../middleware/requireAuth");
+
+// GET /messages/unread-count - how many unread messages the logged in user has
+router.get("/unread-count", requireAuth, async (req, res) => {
+  const count = await prisma.message.count({
+    where: { receiverId: req.userId, read: false },
+  });
+  res.json({ count });
+});
 
 // NEW: GET /messages/conversations - inbox, one row per (listing, other person)
 router.get("/conversations", requireAuth, async (req, res) => {
@@ -18,7 +27,7 @@ router.get("/conversations", requireAuth, async (req, res) => {
   const convos = new Map();
   for (const m of msgs) {
     const other = m.senderId === req.userId ? m.receiver : m.sender;
-    const key = `${m.listingId}:${other.id}`;
+    const key = `m.listingId:{other.id}`;
     if (!convos.has(key)) {
       convos.set(key, {
         listingId: m.listingId,

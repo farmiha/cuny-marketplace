@@ -48,12 +48,17 @@ export default function LiveMessagesTab({ fallback }) {
     apiFetch(`/messages/conversations/${c.listingId}/${c.otherUserId}/read`, {
       method: "PATCH",
       headers: authHeader(t),
-    }).then(() => loadConvos(t)).catch(() => {});
+    }).then(() => {
+      loadConvos(t);
+      // tell the navbar to update its unread count
+      window.dispatchEvent(new Event("messages-read"));
+    }).catch(() => {});
   }
 
   // Set up session, inbox, and socket once
   useEffect(() => {
     let socket;
+    let handler;
     (async () => {
       try {
         const { data } = await supabase.auth.getSession();
@@ -82,25 +87,85 @@ export default function LiveMessagesTab({ fallback }) {
           await openConvo(t, c);
         }
 
-        socket = io(API, { auth: { token: t } });
-        socketRef.current = socket;
-        socket.on("new_message", (m) => {
+        // one handler for every incoming message
+        const onMessage = (m) => {
+          console.log("[live] new message arrived", m.id);
           const a = activeRef.current;
           if (a && m.listingId === a.listingId &&
               (m.senderId === a.otherUserId || m.receiverId === a.otherUserId)) {
             setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+
+            // I'm looking at this chat, so a message from them counts as read
+            if (m.senderId === a.otherUserId) {
+              apiFetch(`/messages/conversations/${a.listingId}/${a.otherUserId}/read`, {
+                method: "PATCH",
+                headers: authHeader(t),
+              })
+                .then(() => {
+                  loadConvos(t);
+                  window.dispatchEvent(new Event("messages-read"));
+                })
+                .catch(() => {});
+              return;
+            }
           }
           loadConvos(t).catch(() => {});
-        });
+        };
+
+        // messages come in through this page's own socket, and also from the
+        // navbar's socket (MessageAlerts.jsx), so a message is never missed
+        socket = io(API, { auth: { token: t } });
+        socketRef.current = socket;
+        socket.on("new_message", onMessage);
+
+        handler = (e) => onMessage(e.detail);
+        window.addEventListener("new-message", handler);
       } catch (err) {
         console.error(err);
       } finally {
         setReady(true);
       }
     })();
-    return () => socket?.disconnect();
+    return () => {
+      socket?.disconnect();
+      if (handler) window.removeEventListener("new-message", handler);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Backup: check for new messages every 5 seconds, in case the instant push is missed
+  useEffect(() => {
+    if (!token || !myId) return;
+    const id = setInterval(async () => {
+      try {
+        loadConvos(token).catch(() => {});
+        const a = activeRef.current;
+        if (!a) return;
+        const history = await apiFetch(
+          `/messages/conversations/${a.listingId}/${a.otherUserId}`,
+          { headers: authHeader(token) }
+        );
+        setMessages((prev) =>
+          prev.length === history.length &&
+          prev[prev.length - 1]?.id === history[history.length - 1]?.id
+            ? prev
+            : history
+        );
+        // they sent something while I'm looking at this chat: mark it read
+        if (history.some((m) => m.receiverId === myId && !m.read)) {
+          apiFetch(`/messages/conversations/${a.listingId}/${a.otherUserId}/read`, {
+            method: "PATCH",
+            headers: authHeader(token),
+          })
+            .then(() => window.dispatchEvent(new Event("messages-read")))
+            .catch(() => {});
+        }
+      } catch {
+        // try again on the next round
+      }
+    }, 5000);
+    return () => clearInterval(id);
+  }, [token, myId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
