@@ -304,7 +304,7 @@ export default function Post() {
           >
             <h3 style={{ margin: "0 0 10px" }}>You reached your limit</h3>
             <p style={{ margin: "0 0 6px" }}>
-              You can post up to 5 listings per day. Try again in 24 hours.
+              You can post up to 10 listings per day. Try again in 24 hours.
             </p>
             {limitInfo.nextPostAt && (
               <p style={{ margin: "0 0 20px", color: "#555" }}>

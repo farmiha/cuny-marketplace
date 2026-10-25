@@ -4,15 +4,18 @@ const prisma = require("../prismaClient");
 const supabase = require("../supabaseClient");
 
 // how many listings one person can post in a rolling 24 hours
-const DAILY_LIMIT = 5;
+const DAILY_LIMIT = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 // works out if this user has used up their posts for the day, and if so when they can post again
 async function getPostingLimit(userId) {
-  // we count from the post log (not the listings table), so deleting a listing
-  // doesn't give the person a free slot back
-  const recent = await prisma.listingPostLog.findMany({
-    where: { userId, createdAt: { gte: new Date(Date.now() - DAY_MS) } },
+  // we count the person's listings from the last 24 hours, so a listing
+  // they delete stops counting and gives the slot back
+  const recent = await prisma.listing.findMany({
+    where: {
+      sellerId: userId,
+      createdAt: { gte: new Date(Date.now() - DAY_MS) },
+    },
     orderBy: { createdAt: "asc" },
     select: { createdAt: true },
   });
@@ -21,7 +24,7 @@ async function getPostingLimit(userId) {
     return { reached: false, remaining: DAILY_LIMIT - recent.length };
   }
 
-  // they can post again once the oldest of their last 5 listings is 24 hours old
+  // they can post again once the oldest of their last 10 listings is 24 hours old
   const blocking = recent[recent.length - DAILY_LIMIT];
   return {
     reached: true,
@@ -91,7 +94,7 @@ router.post("/", async (req, res) => {
     return res.status(401).json({ message: "Invalid session" });
   }
 
-  // stop people who already posted 5 listings in the last 24 hours
+  // stop people who already posted 10 listings in the last 24 hours
   const limit = await getPostingLimit(data.user.id);
   if (limit.reached) {
     return res.status(429).json({
@@ -140,23 +143,19 @@ router.post("/", async (req, res) => {
   });
   if (!campus) return res.status(404).json({ message: "Campus not found" });
 
-  // save the listing and write it in the post log together, so they always match
-  const [listing] = await prisma.$transaction([
-    prisma.listing.create({
-      data: {
-        title,
-        price: priceNumber,
-        categoryId: category.id,
-        campusId: campus.id,
-        description,
-        condition,
-        imageUrl,
-        location,
-        sellerId: data.user.id,
-      },
-    }),
-    prisma.listingPostLog.create({ data: { userId: data.user.id } }),
-  ]);
+  const listing = await prisma.listing.create({
+    data: {
+      title,
+      price: priceNumber,
+      categoryId: category.id,
+      campusId: campus.id,
+      description,
+      condition,
+      imageUrl,
+      location,
+      sellerId: data.user.id,
+    },
+  });
 
   res.status(201).json(listing);
 });
