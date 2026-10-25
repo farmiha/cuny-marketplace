@@ -53,8 +53,33 @@ export default function Navbar() {
           <NavLink to="/browse" className={navLinkClass}>
             Browse
           </NavLink>
-          <NavLink to="/dashboard?tab=messages" className={navLinkClass}>
-            Messages{unread > 0 && ` (${unread > 9 ? "9+" : unread})`}
+          <NavLink
+            to="/dashboard?tab=messages"
+            className={navLinkClass}
+            style={{ position: "relative" }}
+          >
+            Messages
+            {unread > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: -8,
+                  right: -16,
+                  minWidth: 18,
+                  height: 18,
+                  padding: "0 5px",
+                  borderRadius: 9,
+                  background: "#e5383b",
+                  color: "#fff",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  lineHeight: "18px",
+                  textAlign: "center",
+                }}
+              >
+                {unread > 9 ? "9+" : unread}
+              </span>
+            )}
           </NavLink>
           <NavLink to="/dashboard?tab=profile" className={navLinkClass}>
             Profile
