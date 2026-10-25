@@ -5,6 +5,13 @@
 // If yes, proceed to send the verification code;
 // if no, reject before even sending one. Without the seeded rows, that check would have nothing to compare against
 
+// This script sets up the starting data every CUNY Marketplace install needs:
+// the campuses we support, and the listing categories.
+//
+// Run it with: npx prisma db seed
+// Safe to run multiple times — it uses "upsert", so existing rows won't be
+// duplicated or overwritten, only missing ones get added.
+
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -16,6 +23,12 @@ async function main() {
     { name: "Baruch", emailDomain: "stu-mail.baruch.cuny.edu" },
     { name: "Queens", emailDomain: "stu-mail.qc.cuny.edu" },
     { name: "CSI", emailDomain: "stu-mail.csi.cuny.edu" },
+    { name: "CCNY", emailDomain: "stu-mail.ccny.edu" },
+    { name: "York", emailDomain: "stu-mail.york.edu" },
+    { name: "Lehman", emailDomain: "stu-mail.lehman.cuny.edu" },
+    { name: "Medgar Evers", emailDomain: "stu-mail.mec.cuny.edu" },
+    { name: "John Jay", emailDomain: "stu-mail.jjay.cuny.edu" },
+    { name: "City Tech", emailDomain: "stu-mail.citytech.cuny.edu" },
   ];
 
   for (const campus of campuses) {

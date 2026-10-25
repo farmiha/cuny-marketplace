@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import SignInModal from "./SignInModal";
 import CategoryBadge from "./CategoryBadge";
 import PriceBadge from "./PriceBadge";
 import { CATEGORY_ICON_PATHS } from "../data/listings";
@@ -17,6 +18,7 @@ export default function ListingCard({ listing }) {
       .then(({ data }) => setMyId(data.session?.user?.id || null));
   }, []);
   const isMine = !!myId && listing.sellerId === myId;
+  const [showSignIn, setShowSignIn] = useState(false);
   const iconPath =
     CATEGORY_ICON_PATHS[listing.category] || CATEGORY_ICON_PATHS.Other;
 
@@ -90,6 +92,11 @@ export default function ListingCard({ listing }) {
               }}
               onClick={(e) => {
                 e.preventDefault();
+                // logged out visitors get a popup instead
+                if (!myId) {
+                  setShowSignIn(true);
+                  return;
+                }
                 navigate(
                   `/dashboard?tab=messages&listingId=${listing.id}&receiverId=${listing.sellerId}`,
                 );
@@ -100,6 +107,13 @@ export default function ListingCard({ listing }) {
           )}
         </div>
       </div>
+
+      {showSignIn && (
+        <SignInModal
+          message="You must be signed in to message this seller"
+          onClose={() => setShowSignIn(false)}
+        />
+      )}
     </Link>
   );
 }

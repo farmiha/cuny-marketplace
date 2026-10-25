@@ -5,13 +5,19 @@ import { apiFetch } from "../lib/apiClient";
 import { createTempClient } from "../lib/tempSupabase";
 import { useCampusTheme } from "../hooks/useCampusTheme";
 
-// the part of the stu-mail address that changes per campus
+// the school email domain for each campus
 const EMAIL_DOMAINS = {
-  hunter: "hunter",
-  baruch: "baruch",
-  csi: "csi",
-  queens: "qc",
-  brooklyn: "brooklyn",
+  hunter: "stu-mail.hunter.cuny.edu",
+  baruch: "stu-mail.baruch.cuny.edu",
+  csi: "stu-mail.csi.cuny.edu",
+  queens: "stu-mail.qc.cuny.edu",
+  brooklyn: "stu-mail.brooklyn.cuny.edu",
+  ccny: "stu-mail.ccny.edu",
+  york: "stu-mail.york.edu",
+  lehman: "stu-mail.lehman.cuny.edu",
+  mec: "stu-mail.mec.cuny.edu",
+  jjay: "stu-mail.jjay.cuny.edu",
+  citytech: "stu-mail.citytech.cuny.edu",
 };
 
 const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"];
@@ -22,7 +28,7 @@ export default function AuthPages() {
   // login placeholder follows the campus picked in the navbar
   const { campus } = useCampusTheme();
   const emailPlaceholder = EMAIL_DOMAINS[campus]
-    ? `firstname.lastname##@stu-mail.${EMAIL_DOMAINS[campus]}.cuny.edu`
+    ? `firstname.lastname##@${EMAIL_DOMAINS[campus]}`
     : "firstname.lastname##@stu-mail.CAMPUS.cuny.edu";
 
   const [view, setView] = useState("login"); // "login" | "signup" | "recover"
