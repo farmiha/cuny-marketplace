@@ -132,7 +132,12 @@ export default function ListingDetail() {
           {listing.condition && <p>Condition: {listing.condition}</p>}
           {listing.location && <p>Meet at: {listing.location}</p>}
           <p>Campus: {listing.campus?.name}</p>
-          <p>Seller: {listing.seller?.name || "CUNY student"}</p>
+          <p>
+            Seller:{" "}
+            {myId && myId === listing.sellerId
+              ? "you"
+              : listing.seller?.name || "CUNY student"}
+          </p>
           <p className="listing-meta">
             Posted {new Date(listing.createdAt).toLocaleDateString()}
           </p>
@@ -145,7 +150,9 @@ export default function ListingDetail() {
           {myId !== listing.sellerId && listing.status === "active" && (
             <div style={{ marginTop: 24 }}>
               {cartError && (
-                <p style={{ color: "crimson", marginBottom: 10 }}>{cartError}</p>
+                <p style={{ color: "crimson", marginBottom: 10 }}>
+                  {cartError}
+                </p>
               )}
               {inCart ? (
                 <button

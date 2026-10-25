@@ -1,4 +1,6 @@
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";
 import CategoryBadge from "./CategoryBadge";
 import PriceBadge from "./PriceBadge";
 import { CATEGORY_ICON_PATHS } from "../data/listings";
@@ -6,6 +8,15 @@ import { CATEGORY_ICON_PATHS } from "../data/listings";
 // hi
 export default function ListingCard({ listing }) {
   const navigate = useNavigate();
+
+  // who is logged in, so we can tell if this is my own listing
+  const [myId, setMyId] = useState(null);
+  useEffect(() => {
+    supabase.auth
+      .getSession()
+      .then(({ data }) => setMyId(data.session?.user?.id || null));
+  }, []);
+  const isMine = !!myId && listing.sellerId === myId;
   const iconPath =
     CATEGORY_ICON_PATHS[listing.category] || CATEGORY_ICON_PATHS.Other;
 
@@ -61,11 +72,13 @@ export default function ListingCard({ listing }) {
           {sellerName && (
             <div className="seller" style={{ marginTop: 12 }}>
               <span className="avatar">{sellerInitial}</span>
-              <span className="listing-meta">Sold by {sellerName}</span>
+              <span className="listing-meta">
+                Sold by {isMine ? "you" : sellerName}
+              </span>
             </div>
           )}
 
-          {listing.sellerId && (
+          {listing.sellerId && !isMine && (
             <button
               className="cta-primary-solid"
               style={{
