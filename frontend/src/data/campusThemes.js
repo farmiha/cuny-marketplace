@@ -68,7 +68,7 @@ export const CAMPUS_THEMES = {
   ccny: {
     key: "ccny",
     name: "CCNY",
-    full: "City College of New York",
+    full: "CCNY",
     borough: "Manhattan",
     primary: "#7D5CC6",
     primaryInk: "#ffffff",

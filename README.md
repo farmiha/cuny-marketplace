@@ -17,9 +17,9 @@ The result is that usable, affordable items end up in the trash, and students ov
 
 ## Solution
 
-CUNY Marketplace solves this by building a marketplace around one simple restriction: you must have a verified `@stu-mail.[CAMPUS].cuny.edu` email to join. That single feature changes everything. Every listing, every buyer, and every seller is a real, verifiable CUNY student. Along with this, the platform gives students the tools to trade quickly and safely, allowing the following:
+CUNY Marketplace solves this by building a marketplace around one simple restriction: you must have a verified `@stu-mail.CAMPUS.cuny.edu` email to join. That single feature changes everything. Every listing, every buyer, and every seller is a real, verifiable CUNY student. Along with this, the platform gives students the tools to trade quickly and safely, allowing the following:
 
-- **Student Verification** — sign-up is restricted to `@stu-mail.[CAMPUS].cuny.edu` addresses, so every user on the platform is a confirmed CUNY student.
+- **Student Verification** — sign-up is restricted to `@stu-mail.CAMPUS.cuny.edu` addresses, so every user on the platform is a confirmed CUNY student.
 - **Listings** — post items for sale with photos, price, and category in under a minute.
 - **Search & Filters** — find exactly what you need by category or keyword instead of scrolling endlessly.
 - **In-App Messaging** — chat directly with a buyer or seller without giving out a phone number.
@@ -42,13 +42,13 @@ CUNY is the largest urban public university system in the country, which means t
 
 This is our tech stack for developing the MVP of our product:
 
-| Layer               | Tech                                                                                     |
-| ------------------- | ---------------------------------------------------------------------------------------- |
-| Frontend            | React + JavaScript                                                                       |
-| Backend             | Node.js + Express.js API routes                                                          |
-| Real-time messaging | Socket.io                                                                                |
-| Database            | Supabase (PostgreSQL) + Prisma ORM                                                       |
-| Storage             | Supabase Storage for listing image uploads                                               |
-| Authentication      | Supabase Auth/JWT restricted to `@stu-mail.[CAMPUS].cuny.edu`, campus selected at signup |
-| Cart and Payment    | Stripe                                                                                   |
-| Deployment          | Vercel (frontend) + Render (backend)                                                     |
+| Layer               | Tech                                                                                   |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| Frontend            | React + JavaScript                                                                     |
+| Backend             | Node.js + Express.js API routes                                                        |
+| Real-time messaging | Socket.io                                                                              |
+| Database            | Supabase (PostgreSQL) + Prisma ORM                                                     |
+| Storage             | Supabase Storage for listing image uploads                                             |
+| Authentication      | Supabase Auth/JWT restricted to `@stu-mail.CAMPUS.cuny.edu`, campus selected at signup |
+| Cart and Payment    | Stripe                                                                                 |
+| Deployment          | Vercel (frontend) + Render (backend)                                                   |

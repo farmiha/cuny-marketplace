@@ -49,6 +49,8 @@ export default function AuthPages() {
     : emailPlaceholder;
 
   const [error, setError] = useState("");
+  // popup shown when someone tries to log in without an account (holds the message)
+  const [noAccountMsg, setNoAccountMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
   // throwaway client used only for the backup email code (see lib/tempSupabase.js)
@@ -82,9 +84,10 @@ export default function AuthPages() {
       });
       if (otpError) {
         if (otpError.message?.toLowerCase().includes("not allowed")) {
-          throw new Error(
+          setNoAccountMsg(
             "No account found for this email. Please sign up first.",
           );
+          return;
         }
         throw otpError;
       }
@@ -118,7 +121,7 @@ export default function AuthPages() {
         await supabase.auth.signOut();
         setView("signup");
         resetToForm(); // this clears the error, so set the message after it
-        setError(
+        setNoAccountMsg(
           "No account found for this email yet. Please finish signing up.",
         );
         return;
@@ -261,6 +264,61 @@ export default function AuthPages() {
           Back to home
         </span>
 
+        {noAccountMsg && (
+          <div
+            onClick={() => setNoAccountMsg("")}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.55)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000,
+              padding: 16,
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#fff",
+                color: "#1a1a1a",
+                borderRadius: 16,
+                padding: 28,
+                maxWidth: 400,
+                width: "100%",
+                textAlign: "center",
+                boxShadow: "0 10px 40px rgba(0,0,0,0.25)",
+              }}
+            >
+              <h3 style={{ margin: "0 0 18px" }}>{noAccountMsg}</h3>
+              <button
+                className="cta-primary-solid"
+                style={{ width: "100%", padding: "12px 0", borderRadius: 10 }}
+                onClick={() => {
+                  setNoAccountMsg("");
+                  setView("signup");
+                  resetToForm();
+                }}
+              >
+                Sign up
+              </button>
+              <button
+                onClick={() => setNoAccountMsg("")}
+                style={{
+                  marginTop: 10,
+                  background: "none",
+                  border: "none",
+                  color: "#555",
+                  cursor: "pointer",
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="auth-card">
           {error && (
             <p className="field hint" style={{ color: "#e06565" }}>
@@ -292,6 +350,7 @@ export default function AuthPages() {
                     <input
                       type="email"
                       placeholder={emailPlaceholder}
+                      style={{ fontSize: "0.85rem" }}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -505,6 +564,7 @@ export default function AuthPages() {
                     <input
                       type="email"
                       placeholder={signupPlaceholder}
+                      style={{ fontSize: "0.85rem" }}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
