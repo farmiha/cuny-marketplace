@@ -126,10 +126,10 @@ router.post("/", async (req, res) => {
 
   // check the price is a real number above 0 (this also turns "25" into 25)
   const priceNumber = Number(price);
-  if (!Number.isFinite(priceNumber) || priceNumber <= 0) {
+  if (!Number.isInteger(priceNumber) || priceNumber <= 0) {
     return res
       .status(400)
-      .json({ message: "price has to be a number above 0" });
+      .json({ message: "price has to be a whole number above 0" });
   }
 
   // check the category and campus actually exist
