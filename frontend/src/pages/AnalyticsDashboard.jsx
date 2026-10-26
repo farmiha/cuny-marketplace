@@ -22,6 +22,7 @@ import { supabase } from '../lib/supabaseClient'
 import {
   CAMPUS_THEMES,
   CAMPUS_ORDER,
+  getCampusKey,
 } from '../data/campusThemes'
 
 import ListingDensityMap from '../data/ListingDensityMap'
@@ -48,21 +49,7 @@ const tooltipProps = {
 }
 
 function getThemeKey(campusName) {
-  const normalized = String(campusName ?? '')
-    .trim()
-    .toLowerCase()
-
-  return (
-    CAMPUS_ORDER.find((key) => {
-      const theme = CAMPUS_THEMES[key]
-
-      return [
-        theme.key,
-        theme.name,
-        theme.full,
-      ].some((label) => label.toLowerCase() === normalized)
-    }) ?? null
-  )
+  return getCampusKey(campusName);
 }
 
 function formatNumber(value) {
