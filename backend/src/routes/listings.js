@@ -12,7 +12,10 @@ async function getPostingLimit(userId) {
   // we count the person's listings from the last 24 hours, so a listing
   // they delete stops counting and gives the slot back
   const recent = await prisma.listing.findMany({
-    where: { sellerId: userId, createdAt: { gte: new Date(Date.now() - DAY_MS) } },
+    where: {
+      sellerId: userId,
+      createdAt: { gte: new Date(Date.now() - DAY_MS) },
+    },
     orderBy: { createdAt: "asc" },
     select: { createdAt: true },
   });
@@ -66,7 +69,9 @@ router.get("/mine", async (req, res) => {
       orderItems: {
         where: { order: { status: "paid" } },
         take: 1,
-        select: { order: { select: { buyer: { select: { name: true, email: true } } } } },
+        select: {
+          order: { select: { buyer: { select: { name: true, email: true } } } },
+        },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -80,7 +85,7 @@ router.get("/mine", async (req, res) => {
         // only the buyer's name goes out (their email prefix if they have no name)
         soldTo: buyer ? buyer.name || buyer.email.split("@")[0] : null,
       };
-    })
+    }),
   );
 });
 
@@ -141,17 +146,31 @@ router.post("/", async (req, res) => {
 
   // pull out the fields we need from the new listing form
   // the form sends the category name (like "Textbooks"), curl can still send categoryId
-  const { title, price, categoryId, categoryName, campusId, description, condition, imageUrl, location } = req.body;
+  const {
+    title,
+    price,
+    categoryId,
+    categoryName,
+    campusId,
+    description,
+    condition,
+    imageUrl,
+    location,
+  } = req.body;
 
   // check the required fields are actually there
   if (!title || !price || !(categoryId || categoryName) || !campusId) {
-    return res.status(400).json({ message: "title, price, a category, and campusId are required" });
+    return res
+      .status(400)
+      .json({ message: "title, price, a category, and campusId are required" });
   }
 
   // check the price is a real number above 0 (this also turns "25" into 25)
   const priceNumber = Number(price);
   if (!Number.isInteger(priceNumber) || priceNumber <= 0) {
-    return res.status(400).json({ message: "price has to be a whole number above 0" });
+    return res
+      .status(400)
+      .json({ message: "price has to be a whole number above 0" });
   }
 
   // check the category and campus actually exist
@@ -160,7 +179,9 @@ router.post("/", async (req, res) => {
     : await prisma.category.findUnique({ where: { name: categoryName } });
   if (!category) return res.status(404).json({ message: "Category not found" });
 
-  const campus = await prisma.campus.findUnique({ where: { id: Number(campusId) } });
+  const campus = await prisma.campus.findUnique({
+    where: { id: Number(campusId) },
+  });
   if (!campus) return res.status(404).json({ message: "Campus not found" });
 
   const listing = await prisma.listing.create({
