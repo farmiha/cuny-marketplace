@@ -15,6 +15,7 @@ const cartRoutes = require("./routes/cart");
 const paymentRoutes = require("./routes/payments");
 const stripeWebhook = require("./routes/stripeWebhook");
 const registerChatSockets = require("./sockets/chat");
+const { startCleanupJob } = require("./cleanupMessage/cleanupMessage");
 
 
 
@@ -50,4 +51,8 @@ registerChatSockets(io);
 
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`Backend running on port ${PORT}`);
+  startCleanupJob();
+});
+
