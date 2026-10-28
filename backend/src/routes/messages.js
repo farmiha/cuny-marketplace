@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 const prisma = require("../prismaClient");
@@ -27,7 +26,7 @@ router.get("/conversations", requireAuth, async (req, res) => {
   const convos = new Map();
   for (const m of msgs) {
     const other = m.senderId === req.userId ? m.receiver : m.sender;
-    const key = `m.listingId:{other.id}`;
+    const key = `${m.listingId}:${other.id}`;
     if (!convos.has(key)) {
       convos.set(key, {
         listingId: m.listingId,
