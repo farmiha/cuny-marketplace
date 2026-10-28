@@ -17,6 +17,7 @@ const paymentRoutes = require("./routes/payments");
 const stripeWebhook = require("./routes/stripeWebhook");
 const orderRoutes = require("./routes/orders");
 const sellerRoutes = require("./routes/sellers");
+const savesRoutes = require("./routes/saves");
 const registerChatSockets = require("./sockets/chat");
 
 const app = express();
@@ -44,6 +45,7 @@ app.use("/orders", orderRoutes);
 app.use("/ratings", ratingRoutes);
 app.use("/reports", reportRoutes);
 app.use("/sellers", sellerRoutes);
+app.use("/saves", savesRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });

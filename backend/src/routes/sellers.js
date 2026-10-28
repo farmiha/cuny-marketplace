@@ -17,7 +17,11 @@ router.get("/:id", async (req, res) => {
 
   const listings = await prisma.listing.findMany({
     where: { sellerId: seller.id, status: "active" },
-    include: { category: true, seller: { select: { name: true } } },
+    include: {
+      category: true,
+      seller: { select: { name: true } },
+      _count: { select: { saves: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -25,7 +29,14 @@ router.get("/:id", async (req, res) => {
     where: { sellerId: seller.id, status: "sold" },
   });
 
-  res.json({ ...seller, listings, soldCount });
+  res.json({
+    ...seller,
+    listings: listings.map(({ _count, ...l }) => ({
+      ...l,
+      saveCount: _count.saves,
+    })),
+    soldCount,
+  });
 });
 
 module.exports = router;

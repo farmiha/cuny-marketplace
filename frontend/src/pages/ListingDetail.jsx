@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabaseClient";
 import { useCart } from "../hooks/useCart";
 import ReportButton from "../components/ReportButton";
 import SellerRating from "../components/SellerRating";
+import SaveButton from "../components/SaveButton";
 
 export default function ListingDetail() {
   const { id } = useParams();
@@ -125,9 +126,22 @@ export default function ListingDetail() {
         </div>
 
         <div style={{ flex: "1 1 320px" }}>
-          <p className="listing-meta">
-            {listing.category?.name?.toUpperCase()}
-          </p>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <p className="listing-meta" style={{ margin: 0 }}>
+              {listing.category?.name?.toUpperCase()}
+            </p>
+            <SaveButton
+              listingId={listing.id}
+              count={listing.saveCount}
+              sellerId={listing.sellerId}
+            />
+          </div>
           <h2 style={{ margin: "6px 0" }}>{listing.title}</h2>
           <h3 style={{ margin: "0 0 16px" }}>${Number(listing.price)}</h3>
           {listing.condition && <p>Condition: {listing.condition}</p>}
@@ -138,9 +152,9 @@ export default function ListingDetail() {
             {myId && myId === listing.sellerId ? (
               "you"
             ) : (
-                            <Link
+              <Link
                 to={`/seller/${listing.sellerId}`}
-                style={{ fontWeight: 700 }}
+                style={{ fontWeight: 700, textDecoration: "underline" }}
               >
                 {listing.seller?.name || "CUNY student"}
               </Link>
