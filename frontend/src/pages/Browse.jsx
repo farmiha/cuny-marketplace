@@ -2,13 +2,22 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CATEGORIES } from "../data/campusThemes";
 import ListingCard from "../components/ListingCard";
+import SignInModal from "../components/SignInModal";
 import { getListings } from "../lib/apiClient";
+import { supabase } from "../lib/supabaseClient";
 
 export default function Browse() {
   const [listings, setListings] = useState([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All categories");
   const [sort, setSort] = useState("Newest");
+
+  // is someone logged in? (used for the "Post a Listing" button)
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setLoggedIn(!!data.session));
+  }, []);
 
   // get the real listings from the backend when the page loads
   useEffect(() => {
@@ -51,6 +60,13 @@ export default function Browse() {
           to="/post"
           className="cta-primary"
           style={{ padding: "11px 20px" }}
+          onClick={(e) => {
+            // logged out visitors get a popup instead of the post page
+            if (!loggedIn) {
+              e.preventDefault();
+              setShowSignIn(true);
+            }
+          }}
         >
           Post a Listing
         </Link>
@@ -84,6 +100,13 @@ export default function Browse() {
           <p className="sub">No listings match your filters yet.</p>
         )}
       </div>
+
+      {showSignIn && (
+        <SignInModal
+          message="You must be logged in to post a listing"
+          onClose={() => setShowSignIn(false)}
+        />
+      )}
     </div>
   );
 }
