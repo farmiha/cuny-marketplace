@@ -48,6 +48,47 @@ router.get("/", async (req, res) => {
   res.json(listings);
 });
 
+// this lists all of the logged in user's own listings (active and sold), for their Profile
+// (it has to stay above "/:id" or "mine" would be read as a listing id)
+router.get("/mine", async (req, res) => {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (!token) {
+    return res.status(401).json({ message: "Not logged in" });
+  }
+
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data.user) {
+    return res.status(401).json({ message: "Invalid session" });
+  }
+
+  const listings = await prisma.listing.findMany({
+    where: { sellerId: data.user.id },
+    include: {
+      category: true,
+      // the paid order for this listing (if it sold), so we can show who bought it
+      orderItems: {
+        where: { order: { status: "paid" } },
+        take: 1,
+        select: {
+          order: { select: { buyer: { select: { name: true, email: true } } } },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  res.json(
+    listings.map(({ orderItems, ...listing }) => {
+      const buyer = orderItems[0]?.order?.buyer;
+      return {
+        ...listing,
+        // only the buyer's name goes out (their email prefix if they have no name)
+        soldTo: buyer ? buyer.name || buyer.email.split("@")[0] : null,
+      };
+    }),
+  );
+});
+
 // this tells the logged in user if they have hit the daily posting limit
 // (it has to stay above "/:id" or "me" would be read as a listing id)
 router.get("/me/limit", async (req, res) => {
@@ -126,10 +167,10 @@ router.post("/", async (req, res) => {
 
   // check the price is a real number above 0 (this also turns "25" into 25)
   const priceNumber = Number(price);
-  if (!Number.isFinite(priceNumber) || priceNumber <= 0) {
+  if (!Number.isInteger(priceNumber) || priceNumber <= 0) {
     return res
       .status(400)
-      .json({ message: "price has to be a number above 0" });
+      .json({ message: "price has to be a whole number above 0" });
   }
 
   // check the category and campus actually exist

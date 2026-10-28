@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { apiGet, apiFetch } from "../lib/apiClient";
 import { supabase } from "../lib/supabaseClient";
 import { useCart } from "../hooks/useCart";
+import ReportButton from "../components/ReportButton";
+import SellerRating from "../components/SellerRating";
 
 export default function ListingDetail() {
   const { id } = useParams();
@@ -136,7 +138,8 @@ export default function ListingDetail() {
             Seller:{" "}
             {myId && myId === listing.sellerId
               ? "you"
-              : listing.seller?.name || "CUNY student"}
+              : listing.seller?.name || "CUNY student"}{" "}
+            <SellerRating sellerId={listing.sellerId} />
           </p>
           <p className="listing-meta">
             Posted {new Date(listing.createdAt).toLocaleDateString()}
@@ -174,6 +177,9 @@ export default function ListingDetail() {
               )}
             </div>
           )}
+
+          {/* buyers can report a listing (the button hides itself on your own listing) */}
+          <ReportButton listing={listing} />
 
           {/* only the person who posted it sees the delete button */}
           {myId && myId === listing.sellerId && (

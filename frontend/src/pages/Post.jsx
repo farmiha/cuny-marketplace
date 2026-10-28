@@ -186,12 +186,14 @@ export default function Post() {
           <div className="field">
             <label>Price ($)</label>
             <input
-              type="number"
-              min="0.01"
-              step="0.01"
+              type="text"
+              inputMode="numeric"
               placeholder="25"
               value={form.price}
-              onChange={update("price")}
+              onChange={(e) =>
+                // whole dollars only: drop anything that isn't a digit (no decimals)
+                setForm({ ...form, price: e.target.value.replace(/\D/g, "") })
+              }
               required
             />
           </div>
