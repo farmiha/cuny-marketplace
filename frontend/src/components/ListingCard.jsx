@@ -4,9 +4,9 @@ import { supabase } from "../lib/supabaseClient";
 import SignInModal from "./SignInModal";
 import CategoryBadge from "./CategoryBadge";
 import PriceBadge from "./PriceBadge";
+import SaveButton from "./SaveButton";
 import { CATEGORY_ICON_PATHS } from "../data/listings";
 
-// hi
 export default function ListingCard({ listing }) {
   const navigate = useNavigate();
 
@@ -18,7 +18,9 @@ export default function ListingCard({ listing }) {
       .then(({ data }) => setMyId(data.session?.user?.id || null));
   }, []);
   const isMine = !!myId && listing.sellerId === myId;
+
   const [showSignIn, setShowSignIn] = useState(false);
+
   const iconPath =
     CATEGORY_ICON_PATHS[listing.category] || CATEGORY_ICON_PATHS.Other;
 
@@ -56,9 +58,25 @@ export default function ListingCard({ listing }) {
             </svg>
           )}
         </div>
+
         <div className="listing-body">
-          <CategoryBadge category={listing.category} />
+          {/* category on the left, heart and number of saves on the right */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <CategoryBadge category={listing.category} />
+            <SaveButton
+              listingId={listing.id}
+              count={listing.saveCount}
+              sellerId={listing.sellerId}
+            />
+          </div>
           <p className="listing-title">{listing.title}</p>
+
           <div className="listing-footer">
             <span className="listing-meta">
               {listing.condition
@@ -70,15 +88,13 @@ export default function ListingCard({ listing }) {
             </span>
           </div>
 
-          {/* who is selling it: initial in a circle and "Sold by name" */}
-          {sellerName && (
-            <div className="seller" style={{ marginTop: 12 }}>
-              <span className="avatar">{sellerInitial}</span>
-              <span className="listing-meta">
-                Sold by {isMine ? "you" : sellerName}
-              </span>
-            </div>
-          )}
+          {/* who is selling it: initial in a circle and "Sold by" name */}
+          <div className="seller" style={{ marginTop: 12 }}>
+            <span className="avatar">{sellerInitial}</span>
+            <span className="listing-meta">
+              Sold by {isMine ? "you" : sellerName}
+            </span>
+          </div>
 
           {listing.sellerId && !isMine && (
             <button

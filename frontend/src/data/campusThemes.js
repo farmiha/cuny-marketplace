@@ -1,139 +1,138 @@
 export const CAMPUS_THEMES = {
-  all: {
-    key: "all",
-    name: "CUNY",
-    full: "All CUNY",
-    borough: null,
-    primary: "#1E3A73",
-    primaryInk: "#ffffff",
-    accent: "#B6A7D5",
-    accentInk: "#2a1f45",
-    photo: "/campus-photos/all-cuny.jpg",
+  "all": {
+    "key": "all",
+    "name": "CUNY",
+    "full": "All CUNY",
+    "borough": null,
+    "primary": "#1E3A73",
+    "primaryInk": "#ffffff",
+    "accent": "#B6A7D5",
+    "accentInk": "#2a1f45",
+    "photo": "/campus-photos/all-cuny.jpg"
   },
-  hunter: {
-    key: "hunter",
-    name: "Hunter",
-    full: "Hunter College",
-    borough: "Manhattan",
-    primary: "#3F0157",
-    primaryInk: "#ffffff",
-    accent: "#FCB827",
-    accentInk: "#2a1a00",
-    photo: "/campus-photos/hunter.jpg",
+  "hunter": {
+    "key": "hunter",
+    "name": "Hunter",
+    "full": "Hunter College",
+    "borough": "Manhattan",
+    "primary": "#3F0157",
+    "primaryInk": "#ffffff",
+    "accent": "#FCB827",
+    "accentInk": "#2a1a00",
+    "photo": "/campus-photos/hunter.jpg"
   },
-  baruch: {
-    key: "baruch",
-    name: "Baruch",
-    full: "Baruch College",
-    borough: "Manhattan",
-    primary: "#05336B",
-    primaryInk: "#ffffff",
-    accent: "#8BB8E8",
-    accentInk: "#05336B",
-    photo: "/campus-photos/baruch.jpg",
+  "baruch": {
+    "key": "baruch",
+    "name": "Baruch",
+    "full": "Baruch College",
+    "borough": "Manhattan",
+    "primary": "#05336B",
+    "primaryInk": "#ffffff",
+    "accent": "#8BB8E8",
+    "accentInk": "#05336B",
+    "photo": "/campus-photos/baruch.jpg"
   },
-  csi: {
-    key: "csi",
-    name: "CSI",
-    full: "College of Staten Island",
-    borough: "Staten Island",
-    primary: "#69B3E7",
-    primaryInk: "#0b2536",
-    accent: "#3E464C",
-    accentInk: "#ffffff",
-    photo: "/campus-photos/csi.jpg",
+  "csi": {
+    "key": "csi",
+    "name": "CSI",
+    "full": "College of Staten Island",
+    "borough": "Staten Island",
+    "primary": "#69B3E7",
+    "primaryInk": "#0b2536",
+    "accent": "#3E464C",
+    "accentInk": "#ffffff",
+    "photo": "/campus-photos/csi.jpg"
   },
-  brooklyn: {
-    key: "brooklyn",
-    name: "Brooklyn",
-    full: "Brooklyn College",
-    borough: "Brooklyn",
-    primary: "#861F41",
-    primaryInk: "#ffffff",
-    accent: "#F1C400",
-    accentInk: "#3a2c00",
-    photo: "/campus-photos/brooklyn.jpg",
+  "brooklyn": {
+    "key": "brooklyn",
+    "name": "Brooklyn",
+    "full": "Brooklyn College",
+    "borough": "Brooklyn",
+    "primary": "#861F41",
+    "primaryInk": "#ffffff",
+    "accent": "#F1C400",
+    "accentInk": "#3a2c00",
+    "photo": "/campus-photos/brooklyn.jpg"
   },
-  queens: {
-    key: "queens",
-    name: "Queens",
-    full: "Queens College",
-    borough: "Queens",
-    primary: "#CB2C30",
-    primaryInk: "#ffffff",
-    accent: "#78AEE6",
-    accentInk: "#052540",
-    photo: "/campus-photos/queens.jpg",
+  "queens": {
+    "key": "queens",
+    "name": "Queens",
+    "full": "Queens College",
+    "borough": "Queens",
+    "primary": "#CB2C30",
+    "primaryInk": "#ffffff",
+    "accent": "#78AEE6",
+    "accentInk": "#052540",
+    "photo": "/campus-photos/queens.jpg"
   },
-  ccny: {
-    key: "ccny",
-    name: "CCNY",
-    full: "CCNY",
-    borough: "Manhattan",
-    primary: "#7D5CC6",
-    primaryInk: "#ffffff",
-    accent: "#D9D9DC",
-    accentInk: "#2a2a2e",
-    photo: "/campus-photos/ccny.jpg",
+  "ccny": {
+    "key": "ccny",
+    "name": "CCNY",
+    "full": "CCNY",
+    "borough": "Manhattan",
+    "primary": "#7D5CC6",
+    "primaryInk": "#ffffff",
+    "accent": "#D9D9DC",
+    "accentInk": "#2a2a2e",
+    "photo": "/campus-photos/ccny.jpg"
   },
-  york: {
-    key: "york",
-    name: "York",
-    full: "York College",
-    borough: "Queens",
-    primary: "#231F20",
-    primaryInk: "#ffffff",
-    accent: "#E8343C",
-    accentInk: "#ffffff",
-    photo: "/campus-photos/york.jpg",
+  "york": {
+    "key": "york",
+    "name": "York",
+    "full": "York College",
+    "borough": "Queens",
+    "primary": "#231F20",
+    "primaryInk": "#ffffff",
+    "accent": "#E8343C",
+    "accentInk": "#ffffff",
+    "photo": "/campus-photos/york.jpg"
   },
-  lehman: {
-    key: "lehman",
-    name: "Lehman",
-    full: "Lehman College",
-    borough: "Bronx",
-    primary: "#0066A8",
-    primaryInk: "#ffffff",
-    accent: "#85C440",
-    accentInk: "#16300a",
-    photo: "/campus-photos/lehman.jpeg",
+  "lehman": {
+    "key": "lehman",
+    "name": "Lehman",
+    "full": "Lehman College",
+    "borough": "Bronx",
+    "primary": "#0066A8",
+    "primaryInk": "#ffffff",
+    "accent": "#85C440",
+    "accentInk": "#16300a",
+    "photo": "/campus-photos/lehman.jpeg"
   },
-  mec: {
-    key: "mec",
-    name: "Medgar Evers",
-    full: "Medgar Evers College",
-    borough: "Brooklyn",
-    primary: "#231F20",
-    primaryInk: "#ffffff",
-    accent: "#F4BE1A",
-    accentInk: "#2a1f00",
-    photo: "/campus-photos/medgar-evers.jpg",
+  "mec": {
+    "key": "mec",
+    "name": "Medgar Evers",
+    "full": "Medgar Evers College",
+    "borough": "Brooklyn",
+    "primary": "#231F20",
+    "primaryInk": "#ffffff",
+    "accent": "#F4BE1A",
+    "accentInk": "#2a1f00",
+    "photo": "/campus-photos/medgar-evers.jpg"
   },
-  jjay: {
-    key: "jjay",
-    name: "John Jay",
-    full: "John Jay College",
-    borough: "Manhattan",
-    primary: "#162766",
-    primaryInk: "#ffffff",
-    accent: "#1BA8E8",
-    accentInk: "#04263a",
-    photo: "/campus-photos/jjay.jpg",
+  "jjay": {
+    "key": "jjay",
+    "name": "John Jay",
+    "full": "John Jay College",
+    "borough": "Manhattan",
+    "primary": "#162766",
+    "primaryInk": "#ffffff",
+    "accent": "#1BA8E8",
+    "accentInk": "#04263a",
+    "photo": "/campus-photos/jjay.jpg"
   },
-  citytech: {
-    key: "citytech",
-    name: "City Tech",
-    full: "NYC College of Tech",
-    borough: "Brooklyn",
-    primary: "#007FA3",
-    primaryInk: "#ffffff",
-    accent: "#F4AA00",
-    accentInk: "#2a1a00",
-    photo: "/campus-photos/city-tech.jpg",
-  },
+  "citytech": {
+    "key": "citytech",
+    "name": "City Tech",
+    "full": "NYC College of Tech",
+    "borough": "Brooklyn",
+    "primary": "#007FA3",
+    "primaryInk": "#ffffff",
+    "accent": "#F4AA00",
+    "accentInk": "#2a1a00",
+    "photo": "/campus-photos/city-tech.jpg"
+  }
 };
 
-// Order used anywhere we render the list of campuses (dropdowns, profile cards, etc.)
 export const CAMPUS_ORDER = [
   "all",
   "hunter",
@@ -146,7 +145,7 @@ export const CAMPUS_ORDER = [
   "lehman",
   "mec",
   "jjay",
-  "citytech",
+  "citytech"
 ];
 
 export const CATEGORIES = [
@@ -156,5 +155,36 @@ export const CATEGORIES = [
   "Sports",
   "Clothing",
   "Services",
-  "Other",
+  "Other"
 ];
+
+const EXTRA_CAMPUS_ALIASES = {
+  "city college": "ccny",
+  "city college of new york": "ccny",
+  "the city college of new york": "ccny",
+  "john jay college of criminal justice": "jjay",
+  "new york city college of technology": "citytech",
+  "nyc college of technology": "citytech",
+  "new york city college of tech": "citytech",
+  "citytech": "citytech",
+  "medgar evers college of the city university of new york": "mec",
+  "herbert h. lehman college": "lehman"
+};
+
+function normalizeCampusName(value) {
+  return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+export function getCampusKey(value) {
+  const normalized = normalizeCampusName(value);
+  if (!normalized) return null;
+
+  const match = CAMPUS_ORDER.find((key) => {
+    const theme = CAMPUS_THEMES[key];
+    return [theme.key, theme.name, theme.full].some(
+      (label) => normalizeCampusName(label) === normalized,
+    );
+  });
+
+  return match ?? EXTRA_CAMPUS_ALIASES[normalized] ?? null;
+}

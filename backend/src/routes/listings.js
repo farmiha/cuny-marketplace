@@ -42,10 +42,13 @@ router.get("/", async (req, res) => {
       category: true,
       // only the seller's name goes out, never their email or phone
       seller: { select: { name: true } },
+      _count: { select: { saves: true } },
     },
     orderBy: { createdAt: "desc" },
   });
-  res.json(listings);
+  res.json(
+    listings.map(({ _count, ...l }) => ({ ...l, saveCount: _count.saves })),
+  );
 });
 
 // this lists all of the logged in user's own listings (active and sold), for their Profile
@@ -114,12 +117,14 @@ router.get("/:id", async (req, res) => {
       campus: true,
       // only the seller's name goes out, never their email or phone
       seller: { select: { name: true } },
+      _count: { select: { saves: true } },
     },
   });
 
   if (!listing) return res.status(404).json({ message: "Not found" });
 
-  res.json(listing);
+  const { _count, ...rest } = listing;
+  res.json({ ...rest, saveCount: _count.saves });
 });
 
 // this creates a new listing from the new listing form

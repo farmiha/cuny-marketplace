@@ -39,6 +39,7 @@ model User {
   cartItems          CartItem[]
   orders             Order[]
   postLogs           ListingPostLog[]
+  savedListings      SavedListing[]
 }
 
 // one row every time someone posts a listing, used for the daily posting limit.
@@ -81,6 +82,7 @@ model Listing {
   views       ListingView[]
   cartItems   CartItem[]
   orderItems  OrderItem[]
+  saves       SavedListing[]
 }
 
 model Message {
@@ -145,6 +147,20 @@ model CampusVisit {
   campus    Campus   @relation(fields: [campusId], references: [id])
   campusId  Int
   createdAt DateTime @default(now())
+}
+
+// ---------- saved listings (the heart button) ----------
+
+model SavedListing {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId Int
+  createdAt DateTime @default(now())
+
+  // a person can save a listing only once
+  @@unique([userId, listingId])
 }
 
 // ---------- cart & checkout ----------
