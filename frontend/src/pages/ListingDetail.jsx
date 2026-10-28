@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { apiGet, apiFetch } from "../lib/apiClient";
 import { supabase } from "../lib/supabaseClient";
 import { useCart } from "../hooks/useCart";
@@ -21,9 +21,9 @@ export default function ListingDetail() {
 
   // find out who is logged in, so we only show Delete on your own listing
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setMyId(data.session?.user?.id || null);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => setMyId(data.session?.user?.id || null));
   }, []);
 
   // this deletes the listing, then goes back to browse
@@ -101,14 +101,14 @@ export default function ListingDetail() {
     );
   }
 
-  const inCart = [...cart.groups.flatMap((g) => g.items), ...cart.saved].some(
-    (i) => i.listingId === listing.id,
-  );
+  const inCart = [
+    ...cart.groups.flatMap((g) => g.items),
+    ...cart.saved,
+  ].some((i) => i.listingId === listing.id);
 
   return (
     <div className="page">
       {backLink}
-
       <div
         style={{ display: "flex", gap: 32, flexWrap: "wrap", marginTop: 20 }}
       >
@@ -130,21 +130,26 @@ export default function ListingDetail() {
           </p>
           <h2 style={{ margin: "6px 0" }}>{listing.title}</h2>
           <h3 style={{ margin: "0 0 16px" }}>${Number(listing.price)}</h3>
-
           {listing.condition && <p>Condition: {listing.condition}</p>}
           {listing.location && <p>Meet at: {listing.location}</p>}
           <p>Campus: {listing.campus?.name}</p>
           <p>
             Seller:{" "}
-            {myId && myId === listing.sellerId
-              ? "you"
-              : listing.seller?.name || "CUNY student"}{" "}
+            {myId && myId === listing.sellerId ? (
+              "you"
+            ) : (
+                            <Link
+                to={`/seller/${listing.sellerId}`}
+                style={{ fontWeight: 700 }}
+              >
+                {listing.seller?.name || "CUNY student"}
+              </Link>
+            )}{" "}
             <SellerRating sellerId={listing.sellerId} />
           </p>
           <p className="listing-meta">
             Posted {new Date(listing.createdAt).toLocaleDateString()}
           </p>
-
           {listing.description && (
             <p style={{ marginTop: 16 }}>{listing.description}</p>
           )}
