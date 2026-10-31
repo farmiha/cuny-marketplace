@@ -51,6 +51,9 @@ export default function Footer() {
             <Link to="/post" style={linkStyle}>
               Sell something
             </Link>
+            <Link to="/following" style={linkStyle}>
+              Following
+            </Link>
             <Link to="/dashboard?tab=messages" style={linkStyle}>
               Messages
             </Link>

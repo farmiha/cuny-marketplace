@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import Browse from "./pages/Browse";
 import ListingDetail from "./pages/ListingDetail";
 import SellerProfile from "./pages/SellerProfile";
+import Following from "./pages/Following";
 import Post from "./pages/Post";
 import AuthPages from "./pages/AuthPages";
 import Dashboard from "./pages/Dashboard";
@@ -29,13 +30,17 @@ function AppShell() {
             <Route path="/browse" element={<Browse />} />
             <Route path="/listing/:id" element={<ListingDetail />} />
             <Route path="/seller/:id" element={<SellerProfile />} />
+            <Route path="/following" element={<Following />} />
             <Route path="/post" element={<Post />} />
             <Route path="/login" element={<AuthPages />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/about" element={<About />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order/:orderId/confirmation" element={<OrderConfirmation />} />
+            <Route
+              path="/order/:orderId/confirmation"
+              element={<OrderConfirmation />}
+            />
             <Route path="/analytics" element={<AnalyticsDashboard />} />
           </Routes>
         </div>
