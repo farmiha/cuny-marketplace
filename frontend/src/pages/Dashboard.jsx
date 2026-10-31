@@ -7,6 +7,7 @@ import { apiFetch } from "../lib/apiClient";
 import { createTempClient } from "../lib/tempSupabase";
 import { useUnread } from "../components/MessageAlerts";
 import SellerFeedback from "../components/SellerFeedback";
+import FollowStats from "../components/FollowStats";
 
 import LiveMessagesTab from "../components/LiveMessages";
 import MyOrders from "../components/MyOrders";
@@ -379,6 +380,7 @@ function ProfileTab() {
           <p className="profile-name">{displayName}</p>
           <p className="profile-email">{profile.email}</p>
           <p className="profile-sub">{details}</p>
+          <FollowStats />
           <div className="segmented">
             <button
               className={"seg-btn" + (role === "buyer" ? " active" : "")}
