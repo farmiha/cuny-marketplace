@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { CATEGORIES } from "../data/campusThemes";
 import ListingCard from "../components/ListingCard";
 import SignInModal from "../components/SignInModal";
-import { getListings } from "../lib/apiClient";
+import { getListings, apiFetch } from "../lib/apiClient";
 import { supabase } from "../lib/supabaseClient";
 
 export default function Browse() {
@@ -15,8 +15,20 @@ export default function Browse() {
   // is someone logged in? (used for the "Post a Listing" button)
   const [loggedIn, setLoggedIn] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
+
+  // the sellers this person follows, for the "Following" filter
+  const [followingIds, setFollowingIds] = useState([]);
+  const [followingOnly, setFollowingOnly] = useState(false);
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setLoggedIn(!!data.session));
+    supabase.auth.getSession().then(({ data }) => {
+      setLoggedIn(!!data.session);
+      if (!data.session) return;
+      apiFetch("/follows/me/lists", {
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
+      })
+        .then((res) => setFollowingIds(res.following.map((p) => p.id)))
+        .catch(() => {});
+    });
   }, []);
 
   // get the real listings from the backend when the page loads
@@ -38,6 +50,9 @@ export default function Browse() {
     let items = listings.filter((l) =>
       l.title.toLowerCase().includes(search.toLowerCase()),
     );
+    if (followingOnly) {
+      items = items.filter((l) => followingIds.includes(l.sellerId));
+    }
     if (category !== "All categories") {
       items = items.filter((l) => l.category === category);
     }
@@ -47,7 +62,7 @@ export default function Browse() {
       items = [...items].sort((a, b) => b.price - a.price);
     }
     return items;
-  }, [listings, search, category, sort]);
+  }, [listings, search, category, sort, followingOnly, followingIds]);
 
   return (
     <div className="page" id="page-browse">
@@ -72,7 +87,12 @@ export default function Browse() {
         </Link>
       </div>
 
-      <div className="filters-row">
+      <div
+        className="filters-row"
+        style={
+          loggedIn ? { gridTemplateColumns: "1.6fr 1fr 1fr auto" } : undefined
+        }
+      >
         <input
           type="text"
           placeholder="Search items... (e.g., textbook, laptop)"
@@ -90,6 +110,19 @@ export default function Browse() {
           <option>Price: low to high</option>
           <option>Price: high to low</option>
         </select>
+        {loggedIn && (
+          <button
+            className={followingOnly ? "cta-primary-solid" : "view-all"}
+            style={{
+              borderRadius: 10,
+              whiteSpace: "nowrap",
+              padding: "11px 18px",
+            }}
+            onClick={() => setFollowingOnly((v) => !v)}
+          >
+            Following only
+          </button>
+        )}
       </div>
 
       <div className="grid">
@@ -97,7 +130,11 @@ export default function Browse() {
           <ListingCard key={listing.id} listing={listing} />
         ))}
         {filtered.length === 0 && (
-          <p className="sub">No listings match your filters yet.</p>
+          <p className="sub">
+            {followingOnly && followingIds.length === 0
+              ? "You're not following anyone yet. Open a seller's page and tap Follow."
+              : "No listings match your filters yet."}
+          </p>
         )}
       </div>
 
