@@ -29,6 +29,13 @@ async function main() {
     { name: "Medgar Evers", emailDomain: "stu-mail.mec.cuny.edu" },
     { name: "John Jay", emailDomain: "stu-mail.jjay.cuny.edu" },
     { name: "City Tech", emailDomain: "stu-mail.citytech.cuny.edu" },
+    { name: "BMCC", emailDomain: "stu-mail.bmcc.cuny.edu" },
+    { name: "BCC", emailDomain: "stu-mail.bcc.cuny.edu" },
+    { name: "Guttman", emailDomain: "stu-mail.guttman.cuny.edu" },
+    { name: "Hostos", emailDomain: "stu-mail.hostos.cuny.edu" },
+    { name: "KCC", emailDomain: "stu-mail.kbcc.cuny.edu" },
+    { name: "LaGuardia", emailDomain: "stu-mail.laguardia.cuny.edu" },
+    { name: "QCC", emailDomain: "stu-mail.qcc.cuny.edu" },
   ];
 
   for (const campus of campuses) {
