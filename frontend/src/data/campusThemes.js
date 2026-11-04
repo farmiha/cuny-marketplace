@@ -130,6 +130,83 @@ export const CAMPUS_THEMES = {
     "accent": "#F4AA00",
     "accentInk": "#2a1a00",
     "photo": "/campus-photos/city-tech.jpg"
+  },
+  "bmcc": {
+    "key": "bmcc",
+    "name": "BMCC",
+    "full": "BMCC",
+    "borough": "Manhattan",
+    "primary": "#1F4E9E",
+    "primaryInk": "#ffffff",
+    "accent": "#F2A900",
+    "accentInk": "#2a1c00",
+    "photo": "/campus-photos/bmcc.jpg"
+  },
+  "bcc": {
+    "key": "bcc",
+    "name": "BCC",
+    "full": "Bronx CC",
+    "borough": "Bronx",
+    "primary": "#0E6B5C",
+    "primaryInk": "#ffffff",
+    "accent": "#F5C242",
+    "accentInk": "#2a2000",
+    "photo": "/campus-photos/bcc.jpg"
+  },
+  "guttman": {
+    "key": "guttman",
+    "name": "Guttman",
+    "full": "Guttman CC",
+    "borough": "Manhattan",
+    "primary": "#B3202A",
+    "primaryInk": "#ffffff",
+    "accent": "#F3E3C3",
+    "accentInk": "#3a2410",
+    "photo": "/campus-photos/guttman.jpg"
+  },
+  "hostos": {
+    "key": "hostos",
+    "name": "Hostos",
+    "full": "Hostos CC",
+    "borough": "Bronx",
+    "primary": "#0F6A86",
+    "primaryInk": "#ffffff",
+    "accent": "#F0775A",
+    "accentInk": "#3a1208",
+    "photo": "/campus-photos/hostos.png"
+  },
+  "kcc": {
+    "key": "kcc",
+    "name": "KCC",
+    "full": "Kingsborough CC",
+    "borough": "Brooklyn",
+    "primary": "#14367A",
+    "primaryInk": "#ffffff",
+    "accent": "#7FC4E8",
+    "accentInk": "#062a40",
+    "photo": "/campus-photos/kcc.jpg"
+  },
+  "laguardia": {
+    "key": "laguardia",
+    "name": "LaGuardia",
+    "full": "LaGuardia CC",
+    "borough": "Queens",
+    "primary": "#2E3A9E",
+    "primaryInk": "#ffffff",
+    "accent": "#F58220",
+    "accentInk": "#2f1500",
+    "photo": "/campus-photos/laguardia.webp"
+  },
+  "qcc": {
+    "key": "qcc",
+    "name": "QCC",
+    "full": "Queensborough CC",
+    "borough": "Queens",
+    "primary": "#7A1C3A",
+    "primaryInk": "#ffffff",
+    "accent": "#D2BE4A",
+    "accentInk": "#2a2300",
+    "photo": "/campus-photos/qcc.jpeg"
   }
 };
 
@@ -145,7 +222,14 @@ export const CAMPUS_ORDER = [
   "lehman",
   "mec",
   "jjay",
-  "citytech"
+  "citytech",
+  "bmcc",
+  "bcc",
+  "guttman",
+  "hostos",
+  "kcc",
+  "laguardia",
+  "qcc"
 ];
 
 export const CATEGORIES = [

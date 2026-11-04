@@ -78,6 +78,55 @@ export const CAMPUS_LOCATIONS = {
       40.6954,
       -73.987
     ]
+  },
+  "bmcc": {
+    "label": "Borough of Manhattan Community College",
+    "position": [
+      40.7178,
+      -74.0116
+    ]
+  },
+  "bcc": {
+    "label": "Bronx Community College",
+    "position": [
+      40.8578,
+      -73.9117
+    ]
+  },
+  "guttman": {
+    "label": "Guttman Community College",
+    "position": [
+      40.7536,
+      -73.9837
+    ]
+  },
+  "hostos": {
+    "label": "Hostos Community College",
+    "position": [
+      40.8165,
+      -73.9255
+    ]
+  },
+  "kcc": {
+    "label": "Kingsborough Community College",
+    "position": [
+      40.5779,
+      -73.9355
+    ]
+  },
+  "laguardia": {
+    "label": "LaGuardia Community College",
+    "position": [
+      40.7436,
+      -73.9378
+    ]
+  },
+  "qcc": {
+    "label": "Queensborough Community College",
+    "position": [
+      40.7571,
+      -73.7568
+    ]
   }
 };
 
