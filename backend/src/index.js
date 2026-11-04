@@ -19,6 +19,7 @@ const orderRoutes = require("./routes/orders");
 const sellerRoutes = require("./routes/sellers");
 const savesRoutes = require("./routes/saves");
 const followRoutes = require("./routes/follows");
+const wantedRoutes = require("./routes/wanted");
 const registerChatSockets = require("./sockets/chat");
 const { startCleanupJob } = require("./cleanupMessage/cleanupMessage");
 
@@ -49,6 +50,7 @@ app.use("/reports", reportRoutes);
 app.use("/sellers", sellerRoutes);
 app.use("/saves", savesRoutes);
 app.use("/follows", followRoutes);
+app.use("/wanted", wantedRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });

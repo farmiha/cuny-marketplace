@@ -55,6 +55,9 @@ export default function Navbar() {
             <NavLink to="/browse" className={navLinkClass}>
               Browse
             </NavLink>
+            <NavLink to="/wanted" className={navLinkClass}>
+              Wanted
+            </NavLink>
             <NavLink
               to="/dashboard?tab=messages"
               className={navLinkClass}
