@@ -17,6 +17,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+import AdminReports from "./pages/AdminReports"; // NEW
 
 function AppShell() {
   const { campus } = useCampusTheme();
@@ -42,6 +43,7 @@ function AppShell() {
               element={<OrderConfirmation />}
             />
             <Route path="/analytics" element={<AnalyticsDashboard />} />
+            <Route path="/admin/reports" element={<AdminReports />} /> {/* NEW */}
           </Routes>
         </div>
       </main>

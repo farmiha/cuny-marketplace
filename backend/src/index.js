@@ -6,6 +6,7 @@ const { Server } = require("socket.io");
 const analyticsRouter = require("./routes/analytics");
 const ratingRoutes = require("./routes/ratings");
 const reportRoutes = require("./routes/reports");
+const disputeRoutes = require("./routes/disputes"); // NEW
 
 const authRoutes = require("./routes/auth");
 const campusRoutes = require("./routes/campuses");
@@ -46,6 +47,7 @@ app.use("/payments", paymentRoutes);
 app.use("/orders", orderRoutes);
 app.use("/ratings", ratingRoutes);
 app.use("/reports", reportRoutes);
+app.use("/reports", disputeRoutes); // NEW
 app.use("/sellers", sellerRoutes);
 app.use("/saves", savesRoutes);
 app.use("/follows", followRoutes);

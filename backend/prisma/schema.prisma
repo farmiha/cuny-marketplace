@@ -40,6 +40,8 @@ model User {
   orders             Order[]
   postLogs           ListingPostLog[]
   savedListings      SavedListing[]
+  strikes            Int              @default(0)
+  isAdmin            Boolean          @default(false)
 }
 
 // one row every time someone posts a listing, used for the daily posting limit.
@@ -99,16 +101,21 @@ model Message {
 }
 
 model Report {
-  id         Int      @id @default(autoincrement())
-  reason     String
-  status     String   @default("pending")
-  reporter   User     @relation("ReportsMade", fields: [reporterId], references: [id])
-  reporterId String
-  reported   User     @relation("ReportsReceived", fields: [reportedId], references: [id])
-  reportedId String
-  listing    Listing? @relation(fields: [listingId], references: [id])
-  listingId  Int?
-  createdAt  DateTime @default(now())
+  id               Int       @id @default(autoincrement())
+  reason           String
+  status           String    @default("pending") // pending | responded | upheld | dismissed
+  reporter         User      @relation("ReportsMade", fields: [reporterId], references: [id])
+  reporterId       String
+  reported         User      @relation("ReportsReceived", fields: [reportedId], references: [id])
+  reportedId       String
+  listing          Listing?  @relation(fields: [listingId], references: [id])
+  listingId        Int?
+  createdAt        DateTime  @default(now())
+  responseDeadline DateTime?
+  sellerResponse   String?
+  respondedAt      DateTime?
+  resolution       String?
+  resolvedAt       DateTime?
 }
 
 model Rating {
