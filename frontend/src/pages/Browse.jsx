@@ -134,6 +134,19 @@ export default function Browse() {
             {followingOnly && followingIds.length === 0
               ? "You're not following anyone yet. Open a seller's page and tap Follow."
               : "No listings match your filters yet."}
+            {!followingOnly && (
+              <>
+                {" "}
+                Can't find it?{" "}
+                <Link
+                  to={`/wanted/new${search.trim() ? `?title=${encodeURIComponent(search.trim())}` : ""}`}
+                  style={{ fontWeight: 700, textDecoration: "underline" }}
+                >
+                  Post a request
+                </Link>{" "}
+                and let sellers come to you.
+              </>
+            )}
           </p>
         )}
       </div>

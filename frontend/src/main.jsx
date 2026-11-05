@@ -4,6 +4,7 @@ import App from "./App";
 import "./index.css";
 import "./styles/app.css";
 import "./styles/cart.css";
+import "./styles/wanted.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

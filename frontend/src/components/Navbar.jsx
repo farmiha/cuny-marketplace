@@ -102,6 +102,78 @@ export default function Navbar() {
           </NavLink>
         </nav>
 
+          <nav className="primary">
+            <NavLink to="/" end className={navLinkClass}>
+              Home
+            </NavLink>
+            <NavLink to="/browse" className={navLinkClass}>
+              Browse
+            </NavLink>
+            <NavLink to="/wanted" className={navLinkClass}>
+              Wanted
+            </NavLink>
+            <NavLink
+              to="/dashboard?tab=messages"
+              className={navLinkClass}
+              style={{ position: "relative" }}
+            >
+              Messages
+              {/* red badge with the number of unread messages */}
+              {unread > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: -8,
+                    right: -14,
+                    minWidth: 18,
+                    height: 18,
+                    padding: "0 5px",
+                    borderRadius: 9,
+                    background: "#d64545",
+                    color: "#fff",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    lineHeight: "18px",
+                    textAlign: "center",
+                  }}
+                >
+                  {unread > 9 ? "9+" : unread}
+                </span>
+              )}
+            </NavLink>
+            <NavLink to="/dashboard?tab=profile" className={navLinkClass}>
+              Profile
+            </NavLink>
+            <NavLink to="/analytics" className={navLinkClass}>
+              Dashboard
+            </NavLink>
+          </nav>
+
+          <div className="topbar-right">
+            <CampusSwitcher />
+
+            <button
+              className="icon-btn"
+              aria-label="Toggle dark mode"
+              onClick={toggleMode}
+            >
+              {mode === "dark" ? (
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.5 14.6A8.6 8.6 0 1 1 9.4 3.5a7 7 0 0 0 11.1 11.1z" />
+                </svg>
+              ) : (
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <circle cx="12" cy="12" r="4.2" />
+                  <path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7" />
+                </svg>
+              )}
+            </button>
         <div className="topbar-right">
           <CampusSwitcher />
 

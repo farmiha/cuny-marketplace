@@ -15,6 +15,7 @@ model Campus {
   users        User[]
   listings     Listing[]
   visits       CampusVisit[]
+  wantedRequests WantedRequest[]
 }
 
 model User {
@@ -59,6 +60,7 @@ model Category {
   id       Int       @id @default(autoincrement())
   name     String    @unique
   listings Listing[]
+  wantedRequests WantedRequest[]
 }
 
 model Listing {
@@ -85,6 +87,7 @@ model Listing {
   cartItems   CartItem[]
   orderItems  OrderItem[]
   saves       SavedListing[]
+  wantedResponses WantedResponse[]
 }
 
 model Message {
@@ -209,4 +212,43 @@ model OrderItem {
   sellerId   String
   title      String  // copied at purchase time so the receipt never changes
   priceCents Int
+}
+
+// ---------- wanted board ("looking for a TI-84") ----------
+
+// a student asking for something. Sellers answer by attaching one of their own active listings.
+model WantedRequest {
+  id          Int              @id @default(autoincrement())
+  title       String
+  description String?
+  maxBudget   Int?             // whole dollars, optional
+  status      String           @default("open") // open | fulfilled | closed
+  requester   User             @relation(fields: [requesterId], references: [id])
+  requesterId String
+  category    Category         @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+  campus      Campus           @relation(fields: [campusId], references: [id])
+  campusId    Int
+  createdAt   DateTime         @default(now())
+  closedAt    DateTime?
+  responses   WantedResponse[]
+
+  @@index([status, createdAt])
+  @@index([requesterId, createdAt])
+}
+
+model WantedResponse {
+  id        Int           @id @default(autoincrement())
+  request   WantedRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  requestId Int
+  seller    User          @relation(fields: [sellerId], references: [id])
+  sellerId  String
+  // deleting the listing removes the response too
+  listing   Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId Int
+  note      String?
+  createdAt DateTime      @default(now())
+
+  // the same listing can only answer a request once
+  @@unique([requestId, listingId])
 }

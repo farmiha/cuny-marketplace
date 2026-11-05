@@ -9,6 +9,9 @@ import Browse from "./pages/Browse";
 import ListingDetail from "./pages/ListingDetail";
 import SellerProfile from "./pages/SellerProfile";
 import Following from "./pages/Following";
+import Wanted from "./pages/Wanted";
+import WantedPost from "./pages/WantedPost";
+import WantedDetail from "./pages/WantedDetail";
 import Post from "./pages/Post";
 import AuthPages from "./pages/AuthPages";
 import Dashboard from "./pages/Dashboard";
@@ -32,6 +35,9 @@ function AppShell() {
             <Route path="/listing/:id" element={<ListingDetail />} />
             <Route path="/seller/:id" element={<SellerProfile />} />
             <Route path="/following" element={<Following />} />
+            <Route path="/wanted" element={<Wanted />} />
+            <Route path="/wanted/new" element={<WantedPost />} />
+            <Route path="/wanted/:id" element={<WantedDetail />} />
             <Route path="/post" element={<Post />} />
             <Route path="/login" element={<AuthPages />} />
             <Route path="/dashboard" element={<Dashboard />} />
