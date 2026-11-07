@@ -16,11 +16,13 @@ export default function Wanted() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All categories");
   const [loggedIn, setLoggedIn] = useState(false);
+  const [myId, setMyId] = useState(null);
   const [showSignIn, setShowSignIn] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setLoggedIn(!!data.session);
+      setMyId(data.session?.user?.id || null);
       if (!data.session) return;
       authedFetch("/wanted/mine")
         .then(setMine)
@@ -95,10 +97,7 @@ export default function Wanted() {
         </div>
       )}
 
-      <div
-        className="filters-row"
-        style={{ gridTemplateColumns: "1.6fr 1fr" }}
-      >
+      <div className="filters-row" style={{ gridTemplateColumns: "1.6fr 1fr" }}>
         <input
           type="text"
           placeholder="Search requests... (e.g., calculator, textbook)"
@@ -121,7 +120,7 @@ export default function Wanted() {
       {status === "ready" && (
         <div className="wanted-grid">
           {filtered.map((r) => (
-            <WantedCard key={r.id} request={r} />
+            <WantedCard key={r.id} request={r} myId={myId} />
           ))}
           {filtered.length === 0 && (
             <p className="sub" style={{ gridColumn: "1 / -1" }}>

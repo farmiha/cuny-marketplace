@@ -3,10 +3,13 @@ import CategoryBadge from "./CategoryBadge";
 import { STATUS_LABEL, timeAgo } from "../lib/wantedApi";
 
 // one request on the Wanted page
-export default function WantedCard({ request }) {
+export default function WantedCard({ request, myId }) {
   const name = request.requester?.name;
   const initial = name ? name.trim().charAt(0).toUpperCase() : "";
   const offers = request.responseCount || 0;
+  // if you posted this request, it says "You" instead of your name
+  const requesterId = request.requesterId ?? request.requester?.id;
+  const isMine = !!myId && myId === requesterId;
 
   return (
     <Link
@@ -33,14 +36,17 @@ export default function WantedCard({ request }) {
           )}
 
           <p className="wanted-budget">
-            {request.maxBudget ? `Up to $${request.maxBudget}` : "No budget set"}
+            {request.maxBudget
+              ? `Up to $${request.maxBudget}`
+              : "No budget set"}
           </p>
 
           <div className="listing-footer">
             <div className="seller">
               <span className="avatar">{initial}</span>
               <span className="listing-meta">
-                {name || "CUNY student"} · {request.campus?.name}
+                {isMine ? "You" : name || "CUNY student"} ·{" "}
+                {request.campus?.name}
               </span>
             </div>
             <span className="listing-meta">{timeAgo(request.createdAt)}</span>

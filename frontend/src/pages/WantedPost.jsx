@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CATEGORIES } from "../data/campusThemes";
+import SignInModal from "../components/SignInModal";
 import { supabase } from "../lib/supabaseClient";
 import { authedFetch, errorMessage } from "../lib/wantedApi";
 
@@ -19,6 +20,7 @@ export default function WantedPost() {
   const [searchParams] = useSearchParams();
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
   const [form, setForm] = useState({
     // Browse links here with what the person searched for
     title: (searchParams.get("title") || "").slice(0, 100),
@@ -27,12 +29,12 @@ export default function WantedPost() {
     description: "",
   });
 
-  // you have to be logged in to post
+  // you have to be logged in to post: logged out visitors get a popup
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) navigate("/login");
+      if (!data.session) setShowSignIn(true);
     });
-  }, [navigate]);
+  }, []);
 
   const update = (field) => (e) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -121,14 +123,21 @@ export default function WantedPost() {
               value={form.maxBudget}
               onChange={(e) =>
                 // whole dollars only: drop anything that isn't a digit
-                setForm({ ...form, maxBudget: e.target.value.replace(/\D/g, "") })
+                setForm({
+                  ...form,
+                  maxBudget: e.target.value.replace(/\D/g, ""),
+                })
               }
             />
           </div>
 
           <div className="field">
             <label>Category</label>
-            <select value={form.category} onChange={update("category")} required>
+            <select
+              value={form.category}
+              onChange={update("category")}
+              required
+            >
               <option value="">Select a category...</option>
               {CATEGORIES.map((c) => (
                 <option key={c}>{c}</option>
@@ -157,6 +166,13 @@ export default function WantedPost() {
           </div>
         </div>
       </form>
+
+      {showSignIn && (
+        <SignInModal
+          message="You must be logged in to post a request"
+          onClose={() => navigate("/wanted")}
+        />
+      )}
     </div>
   );
 }

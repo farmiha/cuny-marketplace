@@ -12,41 +12,51 @@ const linkBtn = {
   cursor: "pointer",
 };
 
+const smallBtn = { padding: "6px 14px", borderRadius: 10 };
+
+// what the "are you sure?" popup says for each kind of action
+function confirmText(c) {
+  if (c.type === "unfollow") {
+    return {
+      title: `Are you sure you want to unfollow ${c.person.name}?`,
+      body: "You can follow them again later if you want.",
+      button: "Unfollow",
+    };
+  }
+  if (c.type === "remove") {
+    return {
+      title: `Remove ${c.person.name} as a follower?`,
+      body: "They won't be told, and they can follow you again later.",
+      button: "Remove",
+    };
+  }
+  return {
+    title: `Block ${c.person.name}?`,
+    body: "They'll be removed as a follower and won't be able to follow you again.",
+    button: "Block",
+  };
+}
+
 // "3 followers · 2 following" on the Profile card.
 // Clicking either one opens a popup with the list of people.
 export default function FollowStats() {
   const navigate = useNavigate();
   const [lists, setLists] = useState({ followers: [], following: [] });
   const [open, setOpen] = useState(null); // null | "followers" | "following"
-  const [toUnfollow, setToUnfollow] = useState(null); // the person we are asking about
+  const [confirm, setConfirm] = useState(null); // { type, person } we are asking about
 
-  async function unfollow(person) {
+  async function authHeaders() {
     const { data } = await supabase.auth.getSession();
-    if (!data.session) return;
-    try {
-      await apiFetch(`/follows/${person.id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${data.session.access_token}` },
-      });
-      // take them off the list right away
-      setLists((l) => ({
-        ...l,
-        following: l.following.filter((p) => p.id !== person.id),
-      }));
-    } catch {
-      // keep them on the list if it failed
-    }
+    if (!data.session) return null;
+    return { Authorization: `Bearer ${data.session.access_token}` };
   }
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) return;
+      const headers = await authHeaders();
+      if (!headers) return;
       try {
-        const res = await apiFetch("/follows/me/lists", {
-          headers: { Authorization: `Bearer ${data.session.access_token}` },
-        });
-        setLists(res);
+        setLists(await apiFetch("/follows/me/lists", { headers }));
       } catch {
         // just show 0 and 0
       }
@@ -54,7 +64,42 @@ export default function FollowStats() {
     load();
   }, []);
 
+  // unfollow, remove a follower, or block a follower
+  async function runAction({ type, person }) {
+    const headers = await authHeaders();
+    if (!headers) return;
+    try {
+      if (type === "unfollow") {
+        await apiFetch(`/follows/${person.id}`, { method: "DELETE", headers });
+      } else if (type === "remove") {
+        await apiFetch(`/follows/followers/${person.id}`, {
+          method: "DELETE",
+          headers,
+        });
+      } else {
+        await apiFetch(`/follows/block/${person.id}`, {
+          method: "POST",
+          headers,
+        });
+      }
+      // take them off the list right away
+      setLists((l) => ({
+        followers:
+          type === "unfollow"
+            ? l.followers
+            : l.followers.filter((p) => p.id !== person.id),
+        following:
+          type === "unfollow"
+            ? l.following.filter((p) => p.id !== person.id)
+            : l.following,
+      }));
+    } catch {
+      // keep them on the list if it failed
+    }
+  }
+
   const people = open ? lists[open] : [];
+  const text = confirm ? confirmText(confirm) : null;
 
   return (
     <>
@@ -90,7 +135,7 @@ export default function FollowStats() {
               color: "#1a1a1a",
               borderRadius: 16,
               padding: 24,
-              maxWidth: 400,
+              maxWidth: 440,
               width: "100%",
               maxHeight: "70vh",
               display: "flex",
@@ -128,7 +173,7 @@ export default function FollowStats() {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 12,
+                    gap: 10,
                     padding: "10px 4px",
                     borderBottom: "1px solid var(--line)",
                     cursor: "pointer",
@@ -146,17 +191,43 @@ export default function FollowStats() {
                     {p.name[0]}
                   </div>
                   <span style={{ flex: 1 }}>{p.name}</span>
+
                   {open === "following" && (
                     <button
                       className="view-all"
-                      style={{ padding: "6px 14px", borderRadius: 10 }}
+                      style={smallBtn}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setToUnfollow(p);
+                        setConfirm({ type: "unfollow", person: p });
                       }}
                     >
                       Unfollow
                     </button>
+                  )}
+
+                  {open === "followers" && (
+                    <>
+                      <button
+                        className="view-all"
+                        style={smallBtn}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirm({ type: "remove", person: p });
+                        }}
+                      >
+                        Remove
+                      </button>
+                      <button
+                        className="view-all"
+                        style={smallBtn}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirm({ type: "block", person: p });
+                        }}
+                      >
+                        Block
+                      </button>
+                    </>
                   )}
                 </div>
               ))}
@@ -178,9 +249,9 @@ export default function FollowStats() {
         </div>
       )}
 
-      {toUnfollow && (
+      {confirm && (
         <div
-          onClick={() => setToUnfollow(null)}
+          onClick={() => setConfirm(null)}
           style={{
             position: "fixed",
             inset: 0,
@@ -205,25 +276,21 @@ export default function FollowStats() {
               boxShadow: "0 10px 40px rgba(0,0,0,0.25)",
             }}
           >
-            <h3 style={{ margin: "0 0 8px" }}>
-              Are you sure you want to unfollow {toUnfollow.name}?
-            </h3>
-            <p style={{ margin: "0 0 18px", color: "#555" }}>
-              You can follow them again later if you want.
-            </p>
+            <h3 style={{ margin: "0 0 8px" }}>{text.title}</h3>
+            <p style={{ margin: "0 0 18px", color: "#555" }}>{text.body}</p>
             <button
               className="cta-primary-solid"
               style={{ width: "100%", padding: "12px 0", borderRadius: 10 }}
               onClick={async () => {
-                const person = toUnfollow;
-                setToUnfollow(null);
-                await unfollow(person);
+                const c = confirm;
+                setConfirm(null);
+                await runAction(c);
               }}
             >
-              Unfollow
+              {text.button}
             </button>
             <button
-              onClick={() => setToUnfollow(null)}
+              onClick={() => setConfirm(null)}
               style={{
                 marginTop: 10,
                 background: "none",

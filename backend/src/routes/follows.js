@@ -89,6 +89,21 @@ router.get("/me/lists", async (req, res) => {
   });
 });
 
+// who follows this user (names only, public like the follower count)
+router.get("/list/:userId", async (req, res) => {
+  const rows = await prisma.follow.findMany({
+    where: { followingId: req.params.userId },
+    include: { follower: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+  res.json({
+    followers: rows.map((f) => ({
+      id: f.follower.id,
+      name: f.follower.name || "CUNY student",
+    })),
+  });
+});
+
 // follow someone
 router.post("/:userId", async (req, res) => {
   const authUser = await getAuthUser(req);
@@ -106,6 +121,16 @@ router.post("/:userId", async (req, res) => {
   if (!me) return res.status(404).json({ message: "Account not found" });
   if (!target) return res.status(404).json({ message: "User not found" });
 
+  // if this seller blocked me, I can't follow them
+  const blocked = await prisma.followBlock.findUnique({
+    where: {
+      blockerId_blockedId: { blockerId: target.id, blockedId: me.id },
+    },
+  });
+  if (blocked) {
+    return res.status(403).json({ message: "You can't follow this seller" });
+  }
+
   // following twice does nothing, it is not an error
   await prisma.follow.upsert({
     where: {
@@ -116,6 +141,44 @@ router.post("/:userId", async (req, res) => {
   });
 
   res.status(201).json({ following: true });
+});
+
+// remove one of MY followers (they can follow me again)
+router.delete("/followers/:followerId", async (req, res) => {
+  const authUser = await getAuthUser(req);
+  if (!authUser) return res.status(401).json({ message: "Not logged in" });
+
+  await prisma.follow.deleteMany({
+    where: { followerId: req.params.followerId, followingId: authUser.id },
+  });
+  res.json({ removed: true });
+});
+
+// block someone from following me: removes them now, and they can't follow again
+router.post("/block/:userId", async (req, res) => {
+  const authUser = await getAuthUser(req);
+  if (!authUser) return res.status(401).json({ message: "Not logged in" });
+
+  const targetId = req.params.userId;
+  if (targetId === authUser.id) {
+    return res.status(400).json({ message: "You can't block yourself" });
+  }
+
+  const target = await prisma.user.findUnique({ where: { id: targetId } });
+  if (!target) return res.status(404).json({ message: "User not found" });
+
+  await prisma.followBlock.upsert({
+    where: {
+      blockerId_blockedId: { blockerId: authUser.id, blockedId: targetId },
+    },
+    update: {},
+    create: { blockerId: authUser.id, blockedId: targetId },
+  });
+  await prisma.follow.deleteMany({
+    where: { followerId: targetId, followingId: authUser.id },
+  });
+
+  res.json({ blocked: true });
 });
 
 // unfollow someone

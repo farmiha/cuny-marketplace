@@ -1,7 +1,21 @@
-/* Hamburger menu for small screens (the desktop links hide under 900px) */
+/* Hamburger menu for tablets and phones (under 1200px wide).
+   Laptops and desktops (1200px and up) keep the normal top bar with no hamburger. */
 
-/* hidden on desktop */
-.hamburger {
+/* the "Wanted" link made the desktop links a bit wider, so tighten them */
+header.topbar nav.primary {
+  gap: 14px;
+}
+
+/* the campus dropdown is as wide as its longest name, so give it a fixed width on desktop */
+@media (min-width: 1200px) {
+  .topbar-right .campus-select select {
+    width: 160px;
+    text-overflow: ellipsis;
+  }
+}
+
+/* hidden on desktop (written with extra weight so .icon-btn can't override it) */
+.topbar-right .hamburger {
   display: none;
 }
 .mobile-menu {
@@ -13,14 +27,18 @@
   white-space: nowrap;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1199px) {
+  /* the links are too wide for the top bar here, so they move into the menu */
+  header.topbar nav.primary {
+    display: none;
+  }
   .topbar-right {
     flex-wrap: wrap;
   }
   .topbar-right .btn-login {
     padding: 9px 16px;
   }
-  .hamburger {
+  .topbar-right .hamburger {
     display: flex;
     cursor: pointer;
   }

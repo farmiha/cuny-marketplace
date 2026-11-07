@@ -45,6 +45,8 @@ model User {
   isAdmin            Boolean          @default(false)
   WantedRequest      WantedRequest[]
   WantedResponse     WantedResponse[]
+  followBlocksMade   FollowBlock[]    @relation("FollowBlocker")
+  followBlocksRecv   FollowBlock[]    @relation("FollowBlocked")
 }
 
 // one row every time someone posts a listing, used for the daily posting limit.
@@ -253,4 +255,15 @@ model WantedResponse {
 
   // the same listing can only answer a request once
   @@unique([requestId, listingId])
+}
+
+model FollowBlock {
+  id        Int      @id @default(autoincrement())
+  blocker   User     @relation("FollowBlocker", fields: [blockerId], references: [id])
+  blockerId String
+  blocked   User     @relation("FollowBlocked", fields: [blockedId], references: [id])
+  blockedId String
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
 }

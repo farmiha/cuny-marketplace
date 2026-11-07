@@ -11,6 +11,7 @@ export default function FollowButton({ sellerId, sellerName, onChange }) {
   const [following, setFollowing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [refused, setRefused] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -53,8 +54,10 @@ export default function FollowButton({ sellerId, sellerName, onChange }) {
       });
       setFollowing(!following);
       onChange?.(following ? -1 : 1);
+      setRefused(false);
     } catch {
-      // keep the old state if it failed
+      // keep the old state if it failed (a seller who blocked you also lands here)
+      setRefused(!following);
     } finally {
       setBusy(false);
     }
@@ -70,6 +73,11 @@ export default function FollowButton({ sellerId, sellerName, onChange }) {
       >
         {following ? "Following" : "Follow"}
       </button>
+      {refused && (
+        <span className="sub" style={{ marginLeft: 10 }}>
+          You can't follow this seller.
+        </span>
+      )}
 
       {confirming && (
         <div
