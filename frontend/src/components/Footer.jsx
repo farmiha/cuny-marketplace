@@ -1,5 +1,8 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCampusTheme } from "../hooks/useCampusTheme";
+import { supabase } from "../lib/supabaseClient";
+import SignInModal from "./SignInModal";
 
 const linkStyle = {
   color: "var(--muted)",
@@ -18,6 +21,17 @@ const headingStyle = {
 
 export default function Footer() {
   const { theme } = useCampusTheme();
+
+  // "Sell something" needs a login, so logged out visitors get a popup instead
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setLoggedIn(!!data.session));
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => setLoggedIn(!!session),
+    );
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   return (
     <footer>
@@ -48,7 +62,19 @@ export default function Footer() {
             <Link to="/browse" style={linkStyle}>
               Browse listings
             </Link>
-            <Link to="/post" style={linkStyle}>
+            <Link to="/wanted" style={linkStyle}>
+              Wanted
+            </Link>
+            <Link
+              to="/post"
+              style={linkStyle}
+              onClick={(e) => {
+                if (!loggedIn) {
+                  e.preventDefault();
+                  setShowSignIn(true);
+                }
+              }}
+            >
               Sell something
             </Link>
             <Link to="/following" style={linkStyle}>
@@ -99,6 +125,13 @@ export default function Footer() {
           <span>Currently browsing: {theme.full}</span>
         </div>
       </div>
+
+      {showSignIn && (
+        <SignInModal
+          message="You must be logged in to post a listing"
+          onClose={() => setShowSignIn(false)}
+        />
+      )}
     </footer>
   );
 }

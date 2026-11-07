@@ -4,6 +4,7 @@ import { useCampusTheme } from "../hooks/useCampusTheme";
 import { CATEGORIES } from "../data/campusThemes";
 import { supabase } from "../lib/supabaseClient";
 import { apiFetch } from "../lib/apiClient";
+import SignInModal from "../components/SignInModal";
 
 // turns a date into "10/21/2026 at 7:42 PM" in the person's own time zone
 function formatNextPost(iso) {
@@ -23,6 +24,7 @@ function formatNextPost(iso) {
 export default function Post() {
   const { theme } = useCampusTheme();
   const navigate = useNavigate();
+  const [showSignIn, setShowSignIn] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -41,7 +43,11 @@ export default function Post() {
     async function checkLimit() {
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
-      if (!token) return;
+      // logged out visitors get a popup instead of the form
+      if (!token) {
+        setShowSignIn(true);
+        return;
+      }
       try {
         const info = await apiFetch("/listings/me/limit", {
           headers: { Authorization: `Bearer ${token}` },
@@ -321,6 +327,13 @@ export default function Post() {
             </button>
           </div>
         </div>
+      )}
+
+      {showSignIn && (
+        <SignInModal
+          message="You must be logged in to post a listing"
+          onClose={() => navigate("/browse")}
+        />
       )}
     </div>
   );
