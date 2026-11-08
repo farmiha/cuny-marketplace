@@ -1,0 +1,203 @@
+/* "How it works" page. Everything is scoped under .guide so it can't change the rest of the site.
+   Colors: the site's cream page color with navy and lavender. */
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,500&family=EB+Garamond:wght@400;500&family=Courier+Prime:wght@400;700&display=swap");
+
+.guide {
+  --g-bg: #faf6ec;
+  --g-card: #ffffff;
+  --g-fg: #1d2540;
+  --g-muted: #5d6480;
+  --g-rule: #e3dccb;
+  --g-accent: #4f3a99;
+  --g-cream: #f1ecfa;
+  --g-navy: #1f3a73;
+  --g-mat: #ffffff;
+  --g-display: "Cormorant Garamond", Georgia, serif;
+  --g-body: "EB Garamond", Georgia, serif;
+  --g-mono: "Courier Prime", "Courier New", monospace;
+
+  background: var(--g-bg);
+  color: var(--g-fg);
+  font: 20px/1.55 var(--g-body);
+  padding: 0 16px;
+}
+/* The site's main adds cream padding around pages. On the guide, remove it so the page color runs edge to edge. */
+main:has(> .guide) {
+  padding: 0;
+  margin: 0;
+  max-width: none;
+  background: #faf6ec;
+}
+
+/* Dark mode: matches the site's black dark theme. Turns on when the light/dark toggle is set to dark. */
+.guide.guide-dark {
+  --g-bg: #151311;
+  --g-card: #201d19;
+  --g-fg: #ece6d8;
+  --g-muted: #a8a193;
+  --g-rule: #35302a;
+  --g-accent: #b9a6dc;
+  --g-cream: #efe9f9;
+  --g-navy: #1f3a73;
+  --g-mat: #f6f1e6;
+}
+main:has(> .guide-dark) { background: #151311; }
+
+.guide *, .guide *::before, .guide *::after { box-sizing: border-box; }
+.guide a { color: var(--g-accent); }
+.guide-wrap { max-width: 1240px; margin: 0 auto; padding-bottom: 80px; }
+
+.guide-eyebrow {
+  margin: 0 0 8px;
+  font: 700 13px var(--g-mono);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--g-accent);
+}
+
+/* hero */
+.guide-hero {
+  padding: 72px 0 56px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 48px;
+  align-items: center;
+}
+.guide h1 {
+  font-family: var(--g-display);
+  font-weight: 700;
+  font-size: clamp(44px, 8vw, 88px);
+  line-height: 0.98;
+  margin: 0 0 18px;
+  text-wrap: balance;
+  color: var(--g-fg);
+}
+.guide h1 em { font-weight: 500; color: var(--g-accent); }
+.guide-sub { margin: 0 0 22px; max-width: 34ch; font-size: 23px; color: var(--g-muted); }
+.guide-jump { display: flex; flex-wrap: wrap; gap: 8px; }
+.guide-jump a {
+  font: 700 13px var(--g-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--g-fg);
+  border: 1px solid var(--g-rule);
+  padding: 7px 12px;
+  border-radius: 3px;
+}
+.guide-jump a:hover { border-color: var(--g-accent); }
+.guide-art {
+  aspect-ratio: 4 / 5;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid var(--g-rule);
+  background: var(--g-card);
+  box-shadow: 0 24px 48px -28px rgba(31, 58, 115, 0.5);
+}
+.guide-art img { width: 100%; height: 100%; object-fit: cover; object-position: top left; display: block; }
+
+/* four steps */
+.guide-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0 0 40px;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--g-rule);
+  border-bottom: 1px solid var(--g-rule);
+}
+.guide-steps li { padding: 22px 22px 24px; border-left: 1px solid var(--g-rule); }
+.guide-steps li:first-child { border-left: 0; padding-left: 0; }
+.guide-steps b { display: block; font-family: var(--g-display); font-size: 26px; line-height: 1.1; margin-bottom: 4px; }
+.guide-steps span { color: var(--g-muted); font-size: 18px; }
+
+/* one page of the site */
+.guide-page {
+  display: grid;
+  grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.38fr);
+  gap: 48px;
+  padding: 72px 0 24px;
+  margin-top: 48px;
+  border-top: 1px solid var(--g-rule);
+  scroll-margin-top: 80px;
+}
+.guide-text { position: sticky; top: 96px; align-self: start; }
+.guide h2 {
+  font-family: var(--g-display);
+  font-weight: 700;
+  font-size: clamp(40px, 5vw, 60px);
+  line-height: 1;
+  margin: 0 0 12px;
+  color: var(--g-fg);
+}
+.guide-lead { margin: 0 0 20px; color: var(--g-muted); font-size: 22px; }
+.guide-tips { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.guide-tips li { padding-left: 22px; position: relative; }
+.guide-tips li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.62em;
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+  background: var(--g-accent);
+}
+
+/* screenshots with arrows */
+.guide-shots { display: grid; gap: 36px; min-width: 0; }
+.guide-shot { margin: 0; min-width: 0; }
+.guide-shot figcaption {
+  font: 700 13px var(--g-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--g-accent);
+  margin-bottom: 10px;
+}
+.guide-scroll { overflow-x: auto; padding: 2px 2px 10px; }
+.guide-frame {
+  position: relative;
+  container-type: inline-size;
+  min-width: 600px;
+  background: var(--g-mat);
+  border: 8px solid var(--g-mat);
+  outline: 1px solid var(--g-rule);
+  box-shadow: 0 22px 44px -26px rgba(31, 58, 115, 0.5);
+}
+.guide-frame img { display: block; width: 100%; height: auto; filter: sepia(0.1) saturate(0.95); }
+.guide-frame svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.guide-frame line { stroke: #1f3a73; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+.guide-tag {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  background: var(--g-cream);
+  color: var(--g-navy);
+  border: 1.5px solid var(--g-navy);
+  font: 700 max(11px, 1.8cqw) / 1 var(--g-mono);
+  padding: 0.4em 0.75em;
+  border-radius: 3px;
+  box-shadow: 2px 2px 0 #b9a6dc;
+}
+
+.guide-end { margin-top: 72px; text-align: center; color: var(--g-muted); font-size: 22px; }
+
+@media (max-width: 960px) {
+  .guide-hero { grid-template-columns: minmax(0, 1fr); padding-top: 40px; }
+  .guide-art { aspect-ratio: 16 / 10; }
+  .guide-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .guide-steps li:nth-child(3) { border-left: 0; padding-left: 0; }
+  .guide-steps li:nth-child(n + 3) { border-top: 1px solid var(--g-rule); }
+  .guide-page { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .guide-text { position: static; }
+}
+@media (max-width: 640px) {
+  .guide-scroll::after {
+    content: "Swipe to see the whole page";
+    display: block;
+    font: 13px var(--g-mono);
+    color: var(--g-muted);
+    margin-top: 6px;
+  }
+}
+

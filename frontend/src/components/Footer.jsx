@@ -59,12 +59,8 @@ export default function Footer() {
           {/* where to go */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <p style={headingStyle}>Explore</p>
-            <Link to="/browse" style={linkStyle}>
-              Browse listings
-            </Link>
-            <Link to="/wanted" style={linkStyle}>
-              Wanted
-            </Link>
+            <Link to="/browse" style={linkStyle}>Browse listings</Link>
+            <Link to="/wanted" style={linkStyle}>Wanted</Link>
             <Link
               to="/post"
               style={linkStyle}
@@ -80,23 +76,16 @@ export default function Footer() {
             <Link to="/following" style={linkStyle}>
               Following
             </Link>
-            <Link to="/dashboard?tab=messages" style={linkStyle}>
-              Messages
-            </Link>
-            <Link to="/dashboard?tab=profile" style={linkStyle}>
-              Profile
-            </Link>
+            <Link to="/dashboard?tab=messages" style={linkStyle}>Messages</Link>
+            <Link to="/dashboard?tab=profile" style={linkStyle}>Profile</Link>
           </div>
 
           {/* about + help */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <p style={headingStyle}>MarketPlace</p>
-            <Link to="/about" style={linkStyle}>
-              About us
-            </Link>
-            <Link to="/cart" style={linkStyle}>
-              Your cart
-            </Link>
+            <Link to="/about" style={linkStyle}>About us</Link>
+            <Link to="/guide" style={linkStyle}>How it works</Link>
+            <Link to="/cart" style={linkStyle}>Your cart</Link>
           </div>
 
           {/* safety */}
