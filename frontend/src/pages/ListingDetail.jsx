@@ -6,6 +6,7 @@ import { useCart } from "../hooks/useCart";
 import ReportButton from "../components/ReportButton";
 import SellerRating from "../components/SellerRating";
 import SaveButton from "../components/SaveButton";
+import { recordView } from "../lib/recommendationEngine";
 
 export default function ListingDetail() {
   const { id } = useParams();
@@ -26,6 +27,16 @@ export default function ListingDetail() {
       .getSession()
       .then(({ data }) => setMyId(data.session?.user?.id || null));
   }, []);
+
+    // count one view point per listing
+  useEffect(() => {
+    if (!listing) return;
+    recordView({
+      id: listing.id,
+      title: listing.title,
+      category: listing.category?.name,
+    });
+  }, [listing?.id]);
 
   // this deletes the listing, then goes back to browse
   async function handleDelete() {
