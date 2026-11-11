@@ -15,6 +15,10 @@ const REASONS = [
 // sellers get 72 hours to respond to a report
 const RESPONSE_HOURS = 72;
 
+// an account is suspended when it reaches this many upheld strikes
+// (the admin route uses the same number)
+const STRIKE_LIMIT = 5;
+
 // a report is "open" while it's waiting on the seller or the moderator
 const OPEN_STATUSES = ["pending", "responded"];
 
@@ -51,6 +55,62 @@ router.get("/received", async (req, res) => {
       resolvedAt: r.resolvedAt,
     })),
   );
+});
+
+// outcomes the seller hasn't seen yet, plus their strike count and suspension.
+// The frontend uses this for the "your report was reviewed" popup.
+router.get("/outcomes", async (req, res) => {
+  const authUser = await getAuthUser(req);
+  if (!authUser) return res.status(401).json({ message: "Not logged in" });
+
+  const me = await prisma.user.findUnique({
+    where: { id: authUser.id },
+    select: { strikes: true, suspendedAt: true },
+  });
+  if (!me) return res.json({ outcomes: [], strikes: 0, limit: STRIKE_LIMIT });
+
+  const reports = await prisma.report.findMany({
+    where: {
+      reportedId: authUser.id,
+      status: { in: ["upheld", "dismissed"] },
+      sellerSeenAt: null,
+    },
+    include: { listing: { select: { title: true } } },
+    orderBy: { resolvedAt: "asc" },
+  });
+
+  res.json({
+    strikes: me.strikes,
+    limit: STRIKE_LIMIT,
+    suspended: Boolean(me.suspendedAt),
+    // the reporter's name is never sent
+    outcomes: reports.map((r) => ({
+      id: r.id,
+      status: r.status,
+      reason: r.reason,
+      listingTitle: r.listing?.title || "Deleted listing",
+      resolution: r.resolution,
+      resolvedAt: r.resolvedAt,
+    })),
+  });
+});
+
+// the seller closed the popup, so don't show these outcomes again
+router.post("/outcomes/seen", async (req, res) => {
+  const authUser = await getAuthUser(req);
+  if (!authUser) return res.status(401).json({ message: "Not logged in" });
+
+  const ids = Array.isArray(req.body.ids)
+    ? req.body.ids.map(Number).filter(Number.isInteger)
+    : [];
+
+  await prisma.report.updateMany({
+    // only the seller's own reports can be marked as seen
+    where: { id: { in: ids }, reportedId: authUser.id, sellerSeenAt: null },
+    data: { sellerSeenAt: new Date() },
+  });
+
+  res.json({ ok: true });
 });
 
 // does the logged in user already have an open report on this listing?

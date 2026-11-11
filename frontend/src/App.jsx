@@ -4,6 +4,7 @@ import { CartProvider } from "./hooks/useCart";
 import { MessageAlertsProvider } from "./components/MessageAlerts";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import OutcomeNotice from "./components/OutcomeNotice";
 import Home from "./pages/Home";
 import Browse from "./pages/Browse";
 import ListingDetail from "./pages/ListingDetail";
@@ -30,6 +31,7 @@ function AppShell() {
   return (
     <div data-campus={campus}>
       <Navbar />
+      <OutcomeNotice />
       <main>
         {/* the guide has its own full-width background, so it skips the .wrap */}
         {isGuide ? (

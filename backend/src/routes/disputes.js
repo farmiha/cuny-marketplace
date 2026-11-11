@@ -3,6 +3,10 @@ const router = express.Router();
 const prisma = require("../prismaClient");
 const requireAuth = require("../middleware/requireAuth");
 
+// an account is suspended when it reaches this many upheld strikes
+// (same number as in reports.js and AdminReports.jsx)
+const STRIKE_LIMIT = 5;
+
 async function requireAdmin(req, res, next) {
   const me = await prisma.user.findUnique({ where: { id: req.userId } });
   if (!me?.isAdmin) return res.status(403).json({ message: "Admins only" });
@@ -114,10 +118,17 @@ router.patch(
         if (r.count === 0) throw new Error("NOT_DECIDABLE");
 
         if (decision === "upheld") {
-          await tx.user.update({
+          const seller = await tx.user.update({
             where: { id: target.reportedId },
             data: { strikes: { increment: 1 } },
           });
+          // at 5 upheld strikes the account is suspended
+          if (seller.strikes >= STRIKE_LIMIT && !seller.suspendedAt) {
+            await tx.user.update({
+              where: { id: seller.id },
+              data: { suspendedAt: new Date() },
+            });
+          }
         }
       });
       res.json({ message: "Decision saved" });

@@ -43,6 +43,7 @@ model User {
   savedListings      SavedListing[]
   strikes            Int              @default(0)
   isAdmin            Boolean          @default(false)
+  suspendedAt        DateTime? // set when the account reaches 5 upheld strikes
   WantedRequest      WantedRequest[]
   WantedResponse     WantedResponse[]
   followBlocksMade   FollowBlock[]    @relation("FollowBlocker")
@@ -123,6 +124,7 @@ model Report {
   respondedAt      DateTime?
   resolution       String?
   resolvedAt       DateTime?
+  sellerSeenAt     DateTime? // when the seller closed the outcome popup
 }
 
 model Rating {

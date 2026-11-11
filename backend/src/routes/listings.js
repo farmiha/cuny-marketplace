@@ -37,7 +37,8 @@ async function getPostingLimit(userId) {
 // this gets every listing that's currently active in browsing page
 router.get("/", async (req, res) => {
   const listings = await prisma.listing.findMany({
-    where: { status: "active" },
+    // listings from suspended sellers are hidden
+    where: { status: "active", seller: { suspendedAt: null } },
     include: {
       category: true,
       // only the seller's name goes out, never their email or phone
@@ -123,6 +124,13 @@ router.get("/:id", async (req, res) => {
 
   if (!listing) return res.status(404).json({ message: "Not found" });
 
+  // a suspended seller's listing is treated as gone
+  const owner = await prisma.user.findUnique({
+    where: { id: listing.sellerId },
+    select: { suspendedAt: true },
+  });
+  if (owner?.suspendedAt) return res.status(404).json({ message: "Not found" });
+
   const { _count, ...rest } = listing;
   res.json({ ...rest, saveCount: _count.saves });
 });
@@ -138,6 +146,18 @@ router.post("/", async (req, res) => {
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data.user) {
     return res.status(401).json({ message: "Invalid session" });
+  }
+
+  // suspended accounts can't post
+  const poster = await prisma.user.findUnique({
+    where: { id: data.user.id },
+    select: { suspendedAt: true },
+  });
+  if (poster?.suspendedAt) {
+    return res.status(403).json({
+      code: "ACCOUNT_SUSPENDED",
+      message: "Your account is suspended, so you can't post listings",
+    });
   }
 
   // stop people who already posted 10 listings in the last 24 hours
