@@ -1,34 +1,38 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { CATEGORIES } from "../data/campusThemes";
 import ListingCard from "../components/ListingCard";
 import SignInModal from "../components/SignInModal";
-import { getListings, apiFetch } from "../lib/apiClient";
+import RecommendationPanel from "../components/RecommendationPanel";
+import { getListings } from "../lib/apiClient";
 import { supabase } from "../lib/supabaseClient";
+import { useCart } from "../hooks/useCart";
+import { useRecommendations } from "../hooks/useRecommendations";
+import { recommendOrder, syncInterest } from "../lib/recommendationEngine";
+
+// Later: replace with a moderator check so only the 5 creators see the panel.
+const SHOW_ALGORITHM_PANEL = true;
+
+// how many cards show at first, and how many more load each time you scroll
+const PAGE_SIZE = 8;
 
 export default function Browse() {
   const [listings, setListings] = useState([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All categories");
-  const [sort, setSort] = useState("Newest");
+  const [sort, setSort] = useState("Recommended for you");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef(null);
 
   // is someone logged in? (used for the "Post a Listing" button)
   const [loggedIn, setLoggedIn] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
 
-  // the sellers this person follows, for the "Following" filter
-  const [followingIds, setFollowingIds] = useState([]);
-  const [followingOnly, setFollowingOnly] = useState(false);
+  const { cart, loading: cartLoading } = useCart();
+  const reco = useRecommendations(listings);
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setLoggedIn(!!data.session);
-      if (!data.session) return;
-      apiFetch("/follows/me/lists", {
-        headers: { Authorization: `Bearer ${data.session.access_token}` },
-      })
-        .then((res) => setFollowingIds(res.following.map((p) => p.id)))
-        .catch(() => {});
-    });
+    supabase.auth.getSession().then(({ data }) => setLoggedIn(!!data.session));
   }, []);
 
   // get the real listings from the backend when the page loads
@@ -46,23 +50,58 @@ export default function Browse() {
       .catch((err) => console.error("Could not load listings:", err));
   }, []);
 
+  // copy the real saved + cart items into the algorithm
+  useEffect(() => {
+    if (cartLoading || listings.length === 0) return;
+    const savedIds = (cart?.saved ?? []).map((i) => i.listingId);
+    const cartIds = (cart?.groups ?? [])
+      .flatMap((g) => g.items)
+      .map((i) => i.listingId);
+    syncInterest(listings, savedIds, cartIds);
+  }, [cartLoading, listings, cart]);
+
   const filtered = useMemo(() => {
     let items = listings.filter((l) =>
       l.title.toLowerCase().includes(search.toLowerCase()),
     );
-    if (followingOnly) {
-      items = items.filter((l) => followingIds.includes(l.sellerId));
-    }
+
     if (category !== "All categories") {
       items = items.filter((l) => l.category === category);
     }
+
+    if (sort === "Recommended for you") {
+      return recommendOrder(items, reco.appliedScores);
+    }
+
     if (sort === "Price: low to high") {
       items = [...items].sort((a, b) => a.price - b.price);
     } else if (sort === "Price: high to low") {
       items = [...items].sort((a, b) => b.price - a.price);
     }
     return items;
-  }, [listings, search, category, sort, followingOnly, followingIds]);
+  }, [listings, search, category, sort, reco.appliedScores]);
+
+  // go back to the first 8 whenever the filters or the ranking change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [search, category, sort, reco.appliedScores]);
+
+  // when the invisible marker under the grid scrolls into view, show 8 more
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setVisibleCount((n) => n + PAGE_SIZE);
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [visibleCount, filtered.length]);
+
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
 
   return (
     <div className="page" id="page-browse">
@@ -87,15 +126,21 @@ export default function Browse() {
         </Link>
       </div>
 
-      <div
-        className="filters-row"
-        style={
-          loggedIn ? { gridTemplateColumns: "1.6fr 1fr 1fr auto" } : undefined
-        }
-      >
+      {SHOW_ALGORITHM_PANEL && (
+        <RecommendationPanel
+          activity={reco.activity}
+          liveScores={reco.liveScores}
+          appliedScores={reco.appliedScores}
+          pending={reco.pending}
+          onUpdate={reco.update}
+          onReset={reco.reset}
+        />
+      )}
+
+      <div className="filters-row">
         <input
           type="text"
-          placeholder="Search items... (e.g., textbook, laptop)"
+          placeholder="Search items... e.g., textbook, laptop"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -106,50 +151,30 @@ export default function Browse() {
           ))}
         </select>
         <select value={sort} onChange={(e) => setSort(e.target.value)}>
+          <option>Recommended for you</option>
           <option>Newest</option>
           <option>Price: low to high</option>
           <option>Price: high to low</option>
         </select>
-        {loggedIn && (
-          <button
-            className={followingOnly ? "cta-primary-solid" : "view-all"}
-            style={{
-              borderRadius: 10,
-              whiteSpace: "nowrap",
-              padding: "11px 18px",
-            }}
-            onClick={() => setFollowingOnly((v) => !v)}
-          >
-            Following only
-          </button>
-        )}
       </div>
 
       <div className="grid">
-        {filtered.map((listing) => (
+        {visible.map((listing) => (
           <ListingCard key={listing.id} listing={listing} />
         ))}
         {filtered.length === 0 && (
-          <p className="sub">
-            {followingOnly && followingIds.length === 0
-              ? "You're not following anyone yet. Open a seller's page and tap Follow."
-              : "No listings match your filters yet."}
-            {!followingOnly && (
-              <>
-                {" "}
-                Can't find it?{" "}
-                <Link
-                  to={`/wanted/new${search.trim() ? `?title=${encodeURIComponent(search.trim())}` : ""}`}
-                  style={{ fontWeight: 700, textDecoration: "underline" }}
-                >
-                  Post a request
-                </Link>{" "}
-                and let sellers come to you.
-              </>
-            )}
-          </p>
+          <p className="sub">No listings match your filters yet.</p>
         )}
       </div>
+
+      {/* invisible marker: when it scrolls into view, 8 more cards load */}
+      {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
+
+      {!hasMore && filtered.length > PAGE_SIZE && (
+        <p className="sub" style={{ textAlign: "center", marginTop: 24 }}>
+          You've seen all {filtered.length} listings.
+        </p>
+      )}
 
       {showSignIn && (
         <SignInModal
