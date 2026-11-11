@@ -21,6 +21,7 @@ import Wanted from "./pages/Wanted";
 import WantedPost from "./pages/WantedPost";
 import WantedDetail from "./pages/WantedDetail";
 import Guide from "./pages/Guide";
+import AdminReports from "./pages/AdminReports";
 
 function AppShell() {
   const { campus } = useCampusTheme();
@@ -52,6 +53,7 @@ function AppShell() {
             <Route path="/wanted" element={<Wanted />} />
             <Route path="/wanted/new" element={<WantedPost />} />
             <Route path="/wanted/:id" element={<WantedDetail />} />
+            <Route path="/admin/reports" element={<AdminReports />} />
           </Routes>
         </div>
         )}
