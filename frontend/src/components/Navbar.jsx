@@ -70,7 +70,7 @@ export default function Navbar() {
               Wanted
             </NavLink>
             <NavLink
-              to="/dashboard?tab=messages"
+              to="/messages"
               className={navLinkClass}
               style={{ position: "relative" }}
             >
@@ -98,7 +98,7 @@ export default function Navbar() {
                 </span>
               )}
             </NavLink>
-            <NavLink to="/dashboard?tab=profile" className={navLinkClass}>
+            <NavLink to="/profile" className={navLinkClass}>
               Profile
             </NavLink>
             <NavLink to="/analytics" className={navLinkClass}>
@@ -214,13 +214,13 @@ export default function Navbar() {
             <NavLink to="/wanted" className={navLinkClass}>
               Wanted
             </NavLink>
-            <NavLink to="/dashboard?tab=messages" className={navLinkClass}>
+            <NavLink to="/messages" className={navLinkClass}>
               Messages
               {unread > 0 && (
                 <span className="menu-badge">{unread > 9 ? "9+" : unread}</span>
               )}
             </NavLink>
-            <NavLink to="/dashboard?tab=profile" className={navLinkClass}>
+            <NavLink to="/profile" className={navLinkClass}>
               Profile
             </NavLink>
             <NavLink to="/analytics" className={navLinkClass}>

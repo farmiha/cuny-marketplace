@@ -12,7 +12,7 @@ import SellerProfile from "./pages/SellerProfile";
 import Following from "./pages/Following";
 import Post from "./pages/Post";
 import AuthPages from "./pages/AuthPages";
-import Dashboard from "./pages/Dashboard";
+import Dashboard, { MessagesPage, ProfilePage } from "./pages/Dashboard";
 import About from "./pages/About";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
@@ -37,27 +37,32 @@ function AppShell() {
         {isGuide ? (
           <Guide />
         ) : (
-        <div className="wrap">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/browse" element={<Browse />} />
-            <Route path="/listing/:id" element={<ListingDetail />} />
-            <Route path="/seller/:id" element={<SellerProfile />} />
-            <Route path="/following" element={<Following />} />
-            <Route path="/post" element={<Post />} />
-            <Route path="/login" element={<AuthPages />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order/:orderId/confirmation" element={<OrderConfirmation />} />
-            <Route path="/analytics" element={<AnalyticsDashboard />} />
-            <Route path="/wanted" element={<Wanted />} />
-            <Route path="/wanted/new" element={<WantedPost />} />
-            <Route path="/wanted/:id" element={<WantedDetail />} />
-            <Route path="/admin/reports" element={<AdminReports />} />
-          </Routes>
-        </div>
+          <div className="wrap">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/browse" element={<Browse />} />
+              <Route path="/listing/:id" element={<ListingDetail />} />
+              <Route path="/seller/:id" element={<SellerProfile />} />
+              <Route path="/following" element={<Following />} />
+              <Route path="/post" element={<Post />} />
+              <Route path="/login" element={<AuthPages />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/messages" element={<MessagesPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route
+                path="/order/:orderId/confirmation"
+                element={<OrderConfirmation />}
+              />
+              <Route path="/analytics" element={<AnalyticsDashboard />} />
+              <Route path="/wanted" element={<Wanted />} />
+              <Route path="/wanted/new" element={<WantedPost />} />
+              <Route path="/wanted/:id" element={<WantedDetail />} />
+              <Route path="/admin/reports" element={<AdminReports />} />
+            </Routes>
+          </div>
         )}
       </main>
       <Footer />
