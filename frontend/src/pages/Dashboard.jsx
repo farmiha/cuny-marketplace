@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Navigate } from "react-router-dom";
 import { CAMPUS_ORDER, CAMPUS_THEMES } from "../data/campusThemes";
 import { useCampusTheme } from "../hooks/useCampusTheme";
 import { supabase } from "../lib/supabaseClient";
 import { apiFetch } from "../lib/apiClient";
 import { createTempClient } from "../lib/tempSupabase";
-import { useUnread } from "../components/MessageAlerts";
 import SellerFeedback from "../components/SellerFeedback";
 import FollowStats from "../components/FollowStats";
 
@@ -478,32 +477,26 @@ function ProfileTab() {
   );
 }
 
-export default function Dashboard() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get("tab") === "profile" ? "profile" : "messages";
-  const unread = useUnread();
-
+// Messages and Profile are now two separate pages (/messages and /profile)
+export function MessagesPage() {
   return (
-    <div className="page" id="page-dashboard">
-      <div className="segmented" style={{ maxWidth: 260, marginBottom: 26 }}>
-        <button
-          className={"seg-btn" + (tab === "messages" ? " active" : "")}
-          onClick={() => setSearchParams({ tab: "messages" })}
-        >
-          Messages{unread > 0 && ` (${unread > 9 ? "9+" : unread})`}
-        </button>
-        <button
-          className={"seg-btn" + (tab === "profile" ? " active" : "")}
-          onClick={() => setSearchParams({ tab: "profile" })}
-        >
-          Profile
-        </button>
-      </div>
-      {tab === "messages" ? (
-        <LiveMessagesTab fallback={<MessagesTab />} />
-      ) : (
-        <ProfileTab />
-      )}
+    <div className="page" id="page-messages">
+      <LiveMessagesTab fallback={<MessagesTab />} />
     </div>
   );
+}
+
+export function ProfilePage() {
+  return (
+    <div className="page" id="page-profile">
+      <ProfileTab />
+    </div>
+  );
+}
+
+// old links to /dashboard?tab=... still work, they just redirect
+export default function Dashboard() {
+  const [searchParams] = useSearchParams();
+  const to = searchParams.get("tab") === "profile" ? "/profile" : "/messages";
+  return <Navigate to={to} replace />;
 }

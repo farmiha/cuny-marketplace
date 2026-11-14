@@ -44,6 +44,7 @@ model User {
   strikes            Int              @default(0)
   isAdmin            Boolean          @default(false)
   suspendedAt        DateTime? // set when the account reaches 5 upheld strikes
+  notificationsSeenAt DateTime? // when the user last opened the notification bell
   WantedRequest      WantedRequest[]
   WantedResponse     WantedResponse[]
   followBlocksMade   FollowBlock[]    @relation("FollowBlocker")

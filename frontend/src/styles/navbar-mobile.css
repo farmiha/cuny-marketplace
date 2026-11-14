@@ -1,15 +1,26 @@
-/* Hamburger menu for tablets and phones (under 1200px wide).
-   Laptops and desktops (1200px and up) keep the normal top bar with no hamburger. */
+/* Hamburger menu for tablets and phones (under 1280px wide).
+   Laptops and desktops (1280px and up) keep the normal top bar with no hamburger. */
 
-/* the "Wanted" link made the desktop links a bit wider, so tighten them */
+/* the links plus "Guide" are wider now, so tighten them and give the top bar
+   more room than the page content (which stays narrower) so everything fits on one line */
 header.topbar nav.primary {
-  gap: 14px;
+  gap: 12px;
+  white-space: nowrap;
+}
+header.topbar .topbar-inner {
+  max-width: 1360px;
+  flex-wrap: nowrap;
+  gap: 16px;
+}
+.topbar-right {
+  flex-wrap: nowrap;
+  gap: 8px;
 }
 
 /* the campus dropdown is as wide as its longest name, so give it a fixed width on desktop */
-@media (min-width: 1200px) {
+@media (min-width: 1280px) {
   .topbar-right .campus-select select {
-    width: 160px;
+    width: 140px;
     text-overflow: ellipsis;
   }
 }
@@ -27,7 +38,7 @@ header.topbar nav.primary {
   white-space: nowrap;
 }
 
-@media (max-width: 1199px) {
+@media (max-width: 1279px) {
   /* the links are too wide for the top bar here, so they move into the menu */
   header.topbar nav.primary {
     display: none;

@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { apiGet } from "../lib/apiClient";
+import { apiGet, apiFetch } from "../lib/apiClient";
 import { supabase } from "../lib/supabaseClient";
 import ListingCard from "../components/ListingCard";
 import SellerRating from "../components/SellerRating";
 import FollowButton from "../components/FollowButton";
+import BlockedModal from "../components/BlockedModal";
 
 export default function SellerProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [seller, setSeller] = useState(null);
   const [notFound, setNotFound] = useState(false);
+  const [blocked, setBlocked] = useState(false);
   const [followers, setFollowers] = useState(0);
   const [showFollowers, setShowFollowers] = useState(false);
   const [followerList, setFollowerList] = useState([]);
@@ -21,9 +23,19 @@ export default function SellerProfile() {
       if (data.session?.user?.id === id)
         navigate("/dashboard", { replace: true });
     });
-    apiGet(`/sellers/${id}`)
-      .then(setSeller)
-      .catch(() => setNotFound(true));
+    // send the login token so the backend can tell if this seller blocked you
+    supabase.auth.getSession().then(({ data }) => {
+      const token = data.session?.access_token;
+      apiFetch(`/sellers/${id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+        .then(setSeller)
+        .catch((err) => {
+          // the seller blocked this account, so the profile is hidden
+          if (String(err.message).includes("403")) setBlocked(true);
+          else setNotFound(true);
+        });
+    });
     apiGet(`/follows/count/${id}`)
       .then((res) => setFollowers(res.followers))
       .catch(() => {});
@@ -36,6 +48,8 @@ export default function SellerProfile() {
       .catch(() => setFollowerList([]));
     setShowFollowers(true);
   }
+
+  if (blocked) return <BlockedModal />;
 
   if (notFound)
     return (
