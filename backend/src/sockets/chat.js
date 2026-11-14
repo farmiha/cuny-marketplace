@@ -31,7 +31,9 @@ module.exports = function registerChatSockets(io) {
         const text = typeof content === "string" ? content.trim() : "";
 
         if (!listingId || !receiverId || !text) {
-          return ack?.({ error: "listingId, receiverId, and content are required" });
+          return ack?.({
+            error: "listingId, receiverId, and content are required",
+          });
         }
         if (text.length > 1000) {
           return ack?.({ error: "Message is too long" });
@@ -46,8 +48,28 @@ module.exports = function registerChatSockets(io) {
         if (!listing) return ack?.({ error: "Listing not found" });
 
         // One side of every chat must be the listing's seller
-        if (listing.sellerId !== socket.userId && listing.sellerId !== receiverId) {
-          return ack?.({ error: "Messages must be between a buyer and the seller" });
+        if (
+          listing.sellerId !== socket.userId &&
+          listing.sellerId !== receiverId
+        ) {
+          return ack?.({
+            error: "Messages must be between a buyer and the seller",
+          });
+        }
+
+        // if either person blocked the other, no messages go through
+        const blocked = await prisma.followBlock.findFirst({
+          where: {
+            OR: [
+              { blockerId: receiverId, blockedId: socket.userId },
+              { blockerId: socket.userId, blockedId: receiverId },
+            ],
+          },
+        });
+        if (blocked) {
+          return ack?.({
+            error: "You can't message this person because of a block.",
+          });
         }
 
         const created = await prisma.message.create({
