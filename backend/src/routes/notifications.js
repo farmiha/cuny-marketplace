@@ -9,6 +9,7 @@ const MAX_LOOKBACK_MS = 7 * 24 * 60 * 60 * 1000;
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 // GET /notifications - everything new for the logged in user since they last opened the bell
+// GET /notifications?all=1 - the full history for the notifications page (newest first, with dates)
 router.get("/", requireAuth, async (req, res) => {
   const me = await prisma.user.findUnique({
     where: { id: req.userId },
@@ -16,9 +17,12 @@ router.get("/", requireAuth, async (req, res) => {
   });
   if (!me) return res.json({ count: 0, items: [] });
 
+  // the notifications page asks for everything, the bell only for what is new
+  const all = req.query.all === "1";
   const weekAgo = new Date(Date.now() - MAX_LOOKBACK_MS);
-  const since =
-    me.notificationsSeenAt && me.notificationsSeenAt > weekAgo
+  const since = all
+    ? new Date(0)
+    : me.notificationsSeenAt && me.notificationsSeenAt > weekAgo
       ? me.notificationsSeenAt
       : weekAgo;
 
@@ -30,7 +34,18 @@ router.get("/", requireAuth, async (req, res) => {
     include: { follower: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
   });
-  if (followers.length === 1) {
+  if (all) {
+    // on the history page every follower gets their own line
+    for (const f of followers) {
+      items.push({
+        id: `follower-${f.id}`,
+        type: "follow",
+        text: `${f.follower.name || "Someone"} started following you`,
+        link: "/dashboard?tab=profile",
+        at: f.createdAt,
+      });
+    }
+  } else if (followers.length === 1) {
     items.push({
       id: "followers",
       type: "follow",
@@ -121,7 +136,17 @@ router.get("/", requireAuth, async (req, res) => {
     where: { rateeId: req.userId, createdAt: { gt: since } },
     orderBy: { createdAt: "desc" },
   });
-  if (ratings.length > 0) {
+  if (all) {
+    for (const r of ratings) {
+      items.push({
+        id: `rating-${r.id}`,
+        type: "rating",
+        text: `You got a new ${r.score}-star rating`,
+        link: "/dashboard?tab=profile",
+        at: r.createdAt,
+      });
+    }
+  } else if (ratings.length > 0) {
     items.push({
       id: "ratings",
       type: "rating",
@@ -169,6 +194,18 @@ router.get("/", requireAuth, async (req, res) => {
   }
 
   items.sort((a, b) => new Date(b.at) - new Date(a.at));
+
+  if (all) {
+    // mark the ones the user has not opened the bell for yet
+    const seen = me.notificationsSeenAt
+      ? new Date(me.notificationsSeenAt)
+      : new Date(0);
+    const list = items
+      .slice(0, 200)
+      .map((n) => ({ ...n, isNew: new Date(n.at) > seen }));
+    return res.json({ count: list.filter((n) => n.isNew).length, items: list });
+  }
+
   res.json({ count: items.length, items });
 });
 

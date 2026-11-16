@@ -166,6 +166,27 @@ export default function NotificationBell() {
               </div>
             </button>
           ))}
+          <button
+            onClick={() => {
+              setOpen(false);
+              navigate("/notifications");
+            }}
+            style={{
+              display: "block",
+              width: "100%",
+              textAlign: "left",
+              padding: "12px 16px",
+              background: "none",
+              border: "none",
+              borderTop: "1px solid #eee",
+              color: "var(--primary, #1a1a1a)",
+              fontWeight: 700,
+              cursor: "pointer",
+              font: "inherit",
+            }}
+          >
+            View older notifications →
+          </button>
         </div>
       )}
     </div>

@@ -21,6 +21,7 @@ import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import Wanted from "./pages/Wanted";
 import WantedPost from "./pages/WantedPost";
 import WantedDetail from "./pages/WantedDetail";
+import Notifications from "./pages/Notifications";
 import Guide from "./pages/Guide";
 import AdminReports from "./pages/AdminReports";
 
@@ -56,6 +57,7 @@ function AppShell() {
                 path="/order/:orderId/confirmation"
                 element={<OrderConfirmation />}
               />
+              <Route path="/notifications" element={<Notifications />} />
               <Route path="/analytics" element={<AnalyticsDashboard />} />
               <Route path="/wanted" element={<Wanted />} />
               <Route path="/wanted/new" element={<WantedPost />} />
