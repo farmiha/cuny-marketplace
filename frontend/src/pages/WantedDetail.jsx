@@ -56,7 +56,7 @@ function OfferForm({ requestId, takenListingIds, onDone }) {
           You don't have an active listing to offer. Post one first, then come
           back and attach it to this request.
         </p>
-        <Link to="/post" className="cta-primary-solid" style={{ padding: "10px 18px", borderRadius: 10, textDecoration: "none" }}>
+        <Link to="/post" className="mp-btn mp-btn-primary">
           Post a listing
         </Link>
       </div>
@@ -91,7 +91,7 @@ function OfferForm({ requestId, takenListingIds, onDone }) {
         />
       </div>
       {error && <p style={{ color: "crimson", marginBottom: 10 }}>{error}</p>}
-      <button type="submit" className="cta-primary-solid" style={{ padding: "11px 22px", borderRadius: 10 }} disabled={saving}>
+      <button type="submit" className="mp-btn mp-btn-primary" disabled={saving}>
         {saving ? "Sending..." : "Send offer"}
       </button>
     </form>
@@ -139,13 +139,13 @@ export default function WantedDetail() {
   );
 
   if (state === "loading") {
-    return <div className="page">{backLink}<p className="sub">Loading...</p></div>;
+    return <div className="mp-root"><div className="mp-page">{backLink}<p className="sub">Loading...</p></div></div>;
   }
   if (state === "notFound") {
-    return <div className="page">{backLink}<p className="sub">This request doesn't exist anymore.</p></div>;
+    return <div className="mp-root"><div className="mp-page">{backLink}<p className="sub">This request doesn't exist anymore.</p></div></div>;
   }
   if (state === "error") {
-    return <div className="page">{backLink}<p className="sub">Couldn't load this request. Try refreshing the page.</p></div>;
+    return <div className="mp-root"><div className="mp-page">{backLink}<p className="sub">Couldn't load this request. Try refreshing the page.</p></div></div>;
   }
 
   const isOwner = !!myId && myId === request.requesterId;
@@ -194,7 +194,8 @@ export default function WantedDetail() {
   }
 
   return (
-    <div className="page" id="page-wanted-detail" style={{ maxWidth: 760, margin: "0 auto" }}>
+    <div className="mp-root">
+    <div className="mp-page" id="page-wanted-detail" style={{ maxWidth: 780, margin: "0 auto" }}>
       {backLink}
 
       <div className="post-shell" style={{ maxWidth: "none" }}>
@@ -226,26 +227,26 @@ export default function WantedDetail() {
           <div className="wanted-actions">
             {isOpen ? (
               <>
-                <button className="cta-primary-solid" style={{ padding: "10px 18px", borderRadius: 10 }} disabled={busy} onClick={() => setStatus("fulfilled")}>
+                <button className="mp-btn mp-btn-primary" disabled={busy} onClick={() => setStatus("fulfilled")}>
                   I found it
                 </button>
-                <button className="view-all" style={{ borderRadius: 10 }} disabled={busy} onClick={() => setStatus("closed")}>
+                <button className="mp-btn mp-btn-ghost" disabled={busy} onClick={() => setStatus("closed")}>
                   Close request
                 </button>
               </>
             ) : (
-              <button className="view-all" style={{ borderRadius: 10 }} disabled={busy} onClick={() => setStatus("open")}>
+              <button className="mp-btn mp-btn-ghost" disabled={busy} onClick={() => setStatus("open")}>
                 Reopen
               </button>
             )}
             {confirmDelete ? (
               <span className="wanted-confirm">
                 Delete for good?
-                <button className="wanted-danger" disabled={busy} onClick={deleteRequest}>Yes, delete</button>
-                <button className="view-all" style={{ borderRadius: 10 }} onClick={() => setConfirmDelete(false)}>No</button>
+                <button className="mp-btn mp-btn-ghost wanted-danger" disabled={busy} onClick={deleteRequest}>Yes, delete</button>
+                <button className="mp-btn mp-btn-ghost" onClick={() => setConfirmDelete(false)}>No</button>
               </span>
             ) : (
-              <button className="wanted-danger" onClick={() => setConfirmDelete(true)}>
+              <button className="mp-btn mp-btn-ghost wanted-danger" onClick={() => setConfirmDelete(true)}>
                 Delete
               </button>
             )}
@@ -255,7 +256,7 @@ export default function WantedDetail() {
         {/* everyone else can offer a listing while the request is open */}
         {!isOwner && isOpen && (
           <div style={{ marginTop: 22 }}>
-            <button className="cta-primary-solid" style={{ padding: "12px 24px", borderRadius: 10 }} onClick={startOffer}>
+            <button className="mp-btn mp-btn-primary" onClick={startOffer}>
               {showForm ? "Cancel" : "I have this"}
             </button>
             {showForm && (
@@ -325,12 +326,12 @@ export default function WantedDetail() {
                 {o.note && <p style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>“{o.note}”</p>}
 
                 <div className="wanted-actions" style={{ marginTop: 12 }}>
-                  <Link to={`/listing/${o.listing.id}`} className="view-all" style={{ borderRadius: 10, textDecoration: "none" }}>
+                  <Link to={`/listing/${o.listing.id}`} className="mp-btn mp-btn-ghost">
                     View listing
                   </Link>
                   {isOwner && (
                     <button
-                      className="cta-primary-solid"
+                      className="mp-btn mp-btn-primary"
                       style={{ padding: "9px 16px", borderRadius: 10 }}
                       onClick={() =>
                         navigate(
@@ -342,7 +343,7 @@ export default function WantedDetail() {
                     </button>
                   )}
                   {mineOffer && (
-                    <button className="wanted-danger" disabled={busy} onClick={() => withdraw(o.id)}>
+                    <button className="mp-btn mp-btn-ghost wanted-danger" disabled={busy} onClick={() => withdraw(o.id)}>
                       Withdraw offer
                     </button>
                   )}
@@ -359,6 +360,7 @@ export default function WantedDetail() {
           onClose={() => setShowSignIn(false)}
         />
       )}
+    </div>
     </div>
   );
 }

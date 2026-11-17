@@ -6,6 +6,11 @@ import { useCart } from "../hooks/useCart";
 import ReportButton from "../components/ReportButton";
 import SellerRating from "../components/SellerRating";
 import SaveButton from "../components/SaveButton";
+import FollowButton from "../components/FollowButton";
+import { CATEGORY_ICON_PATHS } from "../data/listings";
+
+// soft background color for each category (same as the design)
+const BGS = { Textbooks: "#DCE3FF", Electronics: "#D8F2E6", Furniture: "#FFE9B8", Clothing: "#FFD9D9", Other: "#EADFF5", Sports: "#D6EEF7", Services: "#FDE3C8" };
 import { recordView } from "../lib/recommendationEngine";
 
 export default function ListingDetail() {
@@ -81,14 +86,11 @@ export default function ListingDetail() {
   }, [id]);
 
   const backLink = (
-    <span className="back-link" onClick={() => navigate("/browse")}>
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      >
+    <span
+      onClick={() => navigate("/browse")}
+      style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--mp-mute)", fontWeight: 600, cursor: "pointer" }}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <path d="M15 18l-6-6 6-6" />
       </svg>
       Back to browse
@@ -97,18 +99,22 @@ export default function ListingDetail() {
 
   if (notFound) {
     return (
-      <div className="page">
-        {backLink}
-        <p className="sub">That listing doesn't exist anymore.</p>
+      <div className="mp-root">
+        <div className="mp-page">
+          {backLink}
+          <p style={{ color: "var(--mp-mute)", marginTop: 16 }}>That listing doesn't exist anymore.</p>
+        </div>
       </div>
     );
   }
 
   if (!listing) {
     return (
-      <div className="page">
-        {backLink}
-        <p className="sub">Loading...</p>
+      <div className="mp-root">
+        <div className="mp-page">
+          {backLink}
+          <p style={{ color: "var(--mp-mute)", marginTop: 16 }}>Loading...</p>
+        </div>
       </div>
     );
   }
@@ -118,120 +124,136 @@ export default function ListingDetail() {
     ...cart.saved,
   ].some((i) => i.listingId === listing.id);
 
+  const isMine = !!myId && myId === listing.sellerId;
+  const sellerName = listing.seller?.name || "CUNY student";
+
   return (
-    <div className="page">
-      {backLink}
-      <div
-        style={{ display: "flex", gap: 32, flexWrap: "wrap", marginTop: 20 }}
-      >
-        <div style={{ flex: "1 1 360px", maxWidth: 520 }}>
-          {listing.imageUrl ? (
-            <img
-              src={listing.imageUrl}
-              alt={listing.title}
-              style={{ width: "100%", borderRadius: 16, objectFit: "cover" }}
-            />
-          ) : (
-            <div className="thumb" style={{ height: 320, borderRadius: 16 }} />
-          )}
-        </div>
-
-        <div style={{ flex: "1 1 320px" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <p className="listing-meta" style={{ margin: 0 }}>
-              {listing.category?.name?.toUpperCase()}
-            </p>
-            <SaveButton
-              listingId={listing.id}
-              count={listing.saveCount}
-              sellerId={listing.sellerId}
-            />
-          </div>
-          <h2 style={{ margin: "6px 0" }}>{listing.title}</h2>
-          <h3 style={{ margin: "0 0 16px" }}>${Number(listing.price)}</h3>
-          {listing.condition && <p>Condition: {listing.condition}</p>}
-          {listing.location && <p>Meet at: {listing.location}</p>}
-          <p>Campus: {listing.campus?.name}</p>
-          <p>
-            Seller:{" "}
-            {myId && myId === listing.sellerId ? (
-              "you"
+    <div className="mp-root" id="page-listing">
+      <div className="mp-page">
+        {backLink}
+        <div className="mp-listing-layout">
+          {/* photo (or the category icon on the category color when there is no photo) */}
+          <div>
+            {listing.imageUrl ? (
+              <img
+                src={listing.imageUrl}
+                alt={listing.title}
+                style={{ width: "100%", height: 440, borderRadius: 28, objectFit: "cover", display: "block" }}
+              />
             ) : (
-              <Link
-                to={`/seller/${listing.sellerId}`}
-                style={{ fontWeight: 700, textDecoration: "underline" }}
-              >
-                {listing.seller?.name || "CUNY student"}
-              </Link>
-            )}{" "}
-            <SellerRating sellerId={listing.sellerId} />
-          </p>
-          <p className="listing-meta">
-            Posted {new Date(listing.createdAt).toLocaleDateString()}
-          </p>
-          {listing.description && (
-            <p style={{ marginTop: 16 }}>{listing.description}</p>
-          )}
+              <div style={{ height: 440, borderRadius: 28, background: BGS[listing.category?.name] || BGS.Other, display: "grid", placeItems: "center", color: "rgba(20,24,43,.5)" }}>
+                <svg width="88" height="88" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d={CATEGORY_ICON_PATHS[listing.category?.name] || CATEGORY_ICON_PATHS.Other} />
+                </svg>
+              </div>
+            )}
+          </div>
 
-          {/* everyone except the seller can add it to their cart */}
-          {myId !== listing.sellerId && listing.status === "active" && (
-            <div style={{ marginTop: 24 }}>
-              {cartError && (
-                <p style={{ color: "crimson", marginBottom: 10 }}>
-                  {cartError}
-                </p>
-              )}
-              {inCart ? (
-                <button
-                  className="cta-primary-solid"
-                  style={{ padding: "12px 24px", borderRadius: 10 }}
-                  onClick={() => navigate("/cart")}
-                >
-                  In your cart. View cart
-                </button>
-              ) : (
-                <button
-                  className="cta-primary-solid"
-                  style={{ padding: "12px 24px", borderRadius: 10 }}
-                  onClick={handleAddToCart}
-                  disabled={adding}
-                >
-                  {adding ? "Adding..." : "Add to cart"}
-                </button>
+          {/* details */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {listing.category?.name && <span className="mp-chip" style={{ height: 30, fontSize: 13 }}>{listing.category.name}</span>}
+                {listing.condition && <span className="mp-chip" style={{ height: 30, fontSize: 13 }}>{listing.condition}</span>}
+              </div>
+              <h1 className="mp-listing-title">{listing.title}</h1>
+              <div className="mp-listing-price">${Number(listing.price)}</div>
+              {listing.location && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--mp-mute)", fontWeight: 600 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
+                    <circle cx="12" cy="10" r="2.5" />
+                  </svg>
+                  Pickup at {listing.location}
+                </div>
               )}
             </div>
-          )}
 
-          {/* buyers can report a listing (the button hides itself on your own listing) */}
-          <ReportButton listing={listing} />
+            {/* buttons: message, cart, save (the seller does not see these on their own listing) */}
+            {!isMine && listing.status === "active" && (
+              <div>
+                {cartError && <p style={{ color: "var(--mp-bad)", marginBottom: 10 }}>{cartError}</p>}
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                  <button
+                    className="mp-btn mp-btn-primary mp-btn-lg"
+                    style={{ flex: "1 1 180px" }}
+                    onClick={() => {
+                      if (!myId) return navigate("/login");
+                      navigate(`/dashboard?tab=messages&listingId=${listing.id}&receiverId=${listing.sellerId}`);
+                    }}
+                  >
+                    Message seller
+                  </button>
+                  {inCart ? (
+                    <button className="mp-btn mp-btn-dark mp-btn-lg" style={{ flex: "1 1 140px" }} onClick={() => navigate("/cart")}>
+                      In your cart
+                    </button>
+                  ) : (
+                    <button className="mp-btn mp-btn-dark mp-btn-lg" style={{ flex: "1 1 140px" }} onClick={handleAddToCart} disabled={adding}>
+                      {adding ? "Adding..." : "Add to cart"}
+                    </button>
+                  )}
+                  <SaveButton listingId={listing.id} count={listing.saveCount} sellerId={listing.sellerId} />
+                </div>
+              </div>
+            )}
+            {isMine && (
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <SaveButton listingId={listing.id} count={listing.saveCount} sellerId={listing.sellerId} />
+              </div>
+            )}
 
-          {/* only the person who posted it sees the delete button */}
-          {myId && myId === listing.sellerId && (
-            <div style={{ marginTop: 24 }}>
-              {error && (
-                <p style={{ color: "crimson", marginBottom: 10 }}>{error}</p>
-              )}
-              <button
-                onClick={() => setShowConfirm(true)}
-                style={{
-                  padding: "10px 18px",
-                  borderRadius: 10,
-                  border: "1px solid crimson",
-                  background: "transparent",
-                  color: "crimson",
-                  cursor: "pointer",
-                }}
-              >
-                Delete listing
-              </button>
+            {/* seller */}
+            <div className="mp-card" style={{ padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <span className="mp-avatar" style={{ width: 52, height: 52, flex: "none" }}>
+                  {sellerName.trim().charAt(0).toUpperCase()}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 800 }}>{isMine ? "You" : sellerName}</div>
+                  <div style={{ color: "var(--mp-mute)", fontSize: 14 }}>
+                    <SellerRating sellerId={listing.sellerId} />
+                    {listing.campus?.name ? ` · ${listing.campus.name}` : ""}
+                  </div>
+                </div>
+                {!isMine && listing.sellerId && <FollowButton sellerId={listing.sellerId} sellerName={sellerName} chip />}
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <Link className="mp-chip" to={`/seller/${listing.sellerId}`}>View profile</Link>
+                {/* buyers can report a listing (the button hides itself on your own listing) */}
+                <ReportButton listing={listing} />
+              </div>
             </div>
-          )}
+
+            {listing.description && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800 }}>Description</h2>
+                <p style={{ color: "var(--mp-mute)", whiteSpace: "pre-wrap" }}>{listing.description}</p>
+              </div>
+            )}
+
+            {/* only the person who posted it sees the delete button */}
+            {isMine && (
+              <div>
+                {error && <p style={{ color: "var(--mp-bad)", marginBottom: 10 }}>{error}</p>}
+                <button
+                  className="mp-btn mp-btn-ghost"
+                  style={{ color: "var(--mp-bad)", borderColor: "var(--mp-bad)" }}
+                  onClick={() => setShowConfirm(true)}
+                >
+                  Delete listing
+                </button>
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 12, padding: 16, borderRadius: 16, background: "var(--mp-accent-soft)" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: "none", color: "var(--mp-accent)" }}>
+                <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+              <p style={{ fontSize: 14 }}>Meet in a public spot on campus and check the item before you pay.</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -239,61 +261,18 @@ export default function ListingDetail() {
       {showConfirm && (
         <div
           onClick={() => !deleting && setShowConfirm(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "#fff",
-              color: "#1a1a1a",
-              borderRadius: 16,
-              padding: 28,
-              maxWidth: 400,
-              width: "90%",
-              boxShadow: "0 10px 40px rgba(0,0,0,0.25)",
-            }}
-          >
+          <div className="mp-card" onClick={(e) => e.stopPropagation()} style={{ padding: 28, maxWidth: 400, width: "90%" }}>
             <h3 style={{ margin: "0 0 8px" }}>Delete this listing?</h3>
-            <p style={{ margin: "0 0 20px" }}>
+            <p style={{ margin: "0 0 20px", color: "var(--mp-mute)" }}>
               "{listing.title}" will be removed for good. This can't be undone.
             </p>
-            <div
-              style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}
-            >
-              <button
-                onClick={() => setShowConfirm(false)}
-                disabled={deleting}
-                style={{
-                  padding: "10px 18px",
-                  borderRadius: 10,
-                  border: "1px solid #ccc",
-                  background: "#fff",
-                  color: "#1a1a1a",
-                  cursor: "pointer",
-                }}
-              >
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button className="mp-btn mp-btn-ghost" onClick={() => setShowConfirm(false)} disabled={deleting}>
                 Cancel
               </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                style={{
-                  padding: "10px 18px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "crimson",
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
-              >
+              <button className="mp-btn" style={{ background: "var(--mp-bad)", color: "#fff" }} onClick={handleDelete} disabled={deleting}>
                 {deleting ? "Deleting..." : "Yes, delete"}
               </button>
             </div>

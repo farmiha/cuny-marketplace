@@ -2,14 +2,22 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useCampusTheme } from "../hooks/useCampusTheme";
 import { CATEGORIES } from "../data/campusThemes";
-import { LISTINGS, CATEGORY_ICON_PATHS } from "../data/listings";
+import { LISTINGS } from "../data/listings";
 import { supabase } from "../lib/supabaseClient";
 import ListingCard from "../components/ListingCard";
 import SignInModal from "../components/SignInModal";
 
+const TRUST = [
+  { text: ["Verified with your", "CUNY email"], icon: <><circle cx="12" cy="12" r="9" /><path d="m8.5 12.5 2.5 2.5 4.5-5" /></> },
+  { text: ["Free to list,", "always"], icon: <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /> },
+  { text: ["Meet safely", "on campus"], icon: <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z" /> },
+];
+
 export default function Home() {
   const { theme } = useCampusTheme();
-  const latest = LISTINGS.slice(0, 4);
+  const [cat, setCat] = useState("All");
+  const shown = LISTINGS.filter((l) => cat === "All" || l.category === cat);
+  const latest = shown.slice(0, 4);
 
   // find out if someone is logged in, so "Sell something" can ask visitors to sign in
   const [loggedIn, setLoggedIn] = useState(false);
@@ -19,131 +27,99 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="page" id="page-home">
-      <section className="hero">
-        <div className="hero-photo" aria-hidden="true" />
-        <div className="hero-content">
-          <div className="eyebrow">
-            <span className="dot-pulse" />
-            <span>{theme.full.toUpperCase()} MARKETPLACE</span>
+    <div className="mp-root" id="page-home">
+      <div className="mp-page">
+        <section
+          className="mp-hero"
+          style={{ position: "relative", overflow: "hidden", color: "#fff", borderRadius: 32, padding: 48, minHeight: 290, display: "flex", alignItems: "center" }}
+        >
+          <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 16 }}>
+            <span style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 12px", borderRadius: 999, background: "rgba(255,255,255,.16)", fontSize: 12, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff", opacity: 0.7 }} />
+              {theme.full} Marketplace
+            </span>
+            <h1 style={{ fontSize: 48, lineHeight: 1.08 }}>
+              Buy &amp; sell within your <em style={{ color: "var(--mp-ca)" }}>CUNY</em> community
+            </h1>
+            <p style={{ fontSize: 16, color: "rgba(255,255,255,.9)", maxWidth: 480 }}>
+              Textbooks, dorm gear, tickets, tutoring. Sell what you don't need, find what you do. Just classmates, no strangers.
+            </p>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Link to="/browse" className="mp-btn" style={{ background: "var(--mp-ca)", color: "var(--mp-cai)" }}>
+                Browse listings
+              </Link>
+              <Link
+                to="/post"
+                className="mp-btn"
+                style={{ borderColor: "rgba(255,255,255,.6)", color: "#fff" }}
+                onClick={(e) => {
+                  // logged out visitors get a popup instead of the post page
+                  if (!loggedIn) {
+                    e.preventDefault();
+                    setShowSignIn(true);
+                  }
+                }}
+              >
+                Sell something
+              </Link>
+            </div>
           </div>
-          <h1>
-            Buy &amp; sell within your{" "}
-            <span className="accent-word">{theme.name}</span> community
-          </h1>
-          <p className="lede">
-            Textbooks, dorm gear, tickets, tutoring — sell what you don't need,
-            find what you do. Just classmates, no strangers.
-          </p>
-          <div className="hero-ctas">
-            <Link to="/browse" className="cta-primary">
-              Browse listings
-            </Link>
-            <Link
-              to="/post"
-              className="cta-secondary"
-              onClick={(e) => {
-                // logged out visitors get a popup instead of the post page
-                if (!loggedIn) {
-                  e.preventDefault();
-                  setShowSignIn(true);
-                }
-              }}
-            >
-              Sell something
-            </Link>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <div className="trust-strip">
-        <div className="trust-card">
-          <span className="ic">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M9 12l2 2 4-4" />
-              <circle cx="12" cy="12" r="9" />
-            </svg>
-          </span>
-          <p>
-            Verified with your
-            <br />
-            CUNY email
-          </p>
+        <div className="mp-grid3" style={{ marginTop: 20 }}>
+          {TRUST.map((t) => (
+            <div key={t.text[0]} className="mp-card" style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: 14, borderRadius: 20 }}>
+              <span style={{ width: 40, height: 40, borderRadius: 12, background: "var(--mp-accent-soft)", color: "var(--mp-accent)", display: "grid", placeItems: "center", flex: "none" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  {t.icon}
+                </svg>
+              </span>
+              <span style={{ fontWeight: 600, lineHeight: 1.3 }}>
+                {t.text[0]}
+                <br />
+                {t.text[1]}
+              </span>
+            </div>
+          ))}
         </div>
-        <div className="trust-card">
-          <span className="ic">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M12 21s-7-4.35-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.65-9.5 9-9.5 9z" />
-            </svg>
-          </span>
-          <p>
-            Free to list,
-            <br />
-            always
-          </p>
-        </div>
-        <div className="trust-card">
-          <span className="ic">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M12 21c4.5-2.6 8-6.9 8-11.6A8 8 0 0 0 4 9.4C4 14.1 7.5 18.4 12 21z" />
-            </svg>
-          </span>
-          <p>
-            Meet safely
-            <br />
-            on campus
-          </p>
-        </div>
-      </div>
 
-      <div className="categories">
-        {CATEGORIES.map((cat) => (
-          <a href="#" className="chip" key={cat}>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 28 }}>
+          {["All", ...CATEGORIES].map((c) => (
+            <button
+              key={c}
+              type="button"
+              className={"mp-chip" + (cat === c ? " mp-on" : "")}
+              onClick={() => setCat(c)}
             >
-              <path d={CATEGORY_ICON_PATHS[cat]} />
-            </svg>
-            {cat}
-          </a>
-        ))}
-      </div>
+              {c}
+            </button>
+          ))}
+        </div>
 
-      <section>
-        <div className="section-head">
+        <div className="mp-sec-head" style={{ marginTop: 44, alignItems: "center" }}>
           <div>
             <h2>Latest listings</h2>
-            <p className="sub">Fresh drops from students near you</p>
+            <p style={{ color: "var(--mp-mute)", marginTop: 2 }}>
+              {cat === "All" ? "Fresh drops from students near you" : `${shown.length} in ${cat}`}
+            </p>
           </div>
-          <Link to="/browse" className="view-all">
+          <Link to="/browse" className="mp-btn mp-btn-ghost" style={{ height: 40 }}>
             View all
           </Link>
         </div>
 
-        <div className="grid">
-          {latest.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
-          ))}
-        </div>
-      </section>
+        {latest.length === 0 ? (
+          <div className="mp-card" style={{ padding: 36, textAlign: "center", color: "var(--mp-mute)" }}>
+            No listings in this category yet. Be the first to post one.
+          </div>
+        ) : (
+          <div className="mp-grid4">
+            {latest.map((listing) => (
+              <ListingCard showMessage={false} key={listing.id} listing={listing} />
+            ))}
+          </div>
+        )}
+      </div>
 
       {showSignIn && (
         <SignInModal

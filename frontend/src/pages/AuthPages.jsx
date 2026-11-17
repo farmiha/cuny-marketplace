@@ -91,9 +91,7 @@ export default function AuthPages() {
       });
       if (otpError) {
         if (otpError.message?.toLowerCase().includes("not allowed")) {
-          setNoAccountMsg(
-            "No account found for this email. Please sign up first.",
-          );
+          setNoAccountMsg("No account found for this email. Please sign up first.");
           return;
         }
         throw otpError;
@@ -255,53 +253,70 @@ export default function AuthPages() {
     }
   }
 
-  return (
-    <div className="page" id="page-auth">
-      <div className="auth-wrap">
-        <span className="back-link" onClick={() => navigate("/")}>
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          Back to home
-        </span>
+  // ----- small pieces used by every form -----
+  const Err = () =>
+    error ? (
+      <p style={{ color: "var(--mp-bad)", fontSize: 14, fontWeight: 600 }}>{error}</p>
+    ) : null;
 
+  const CodeField = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <label style={{ fontWeight: 700, fontSize: 14 }}>Verification code</label>
+      <input
+        className="mp-input"
+        type="text"
+        placeholder="123456"
+        inputMode="numeric"
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        required
+      />
+    </div>
+  );
+
+  const link = (fn, text) => (
+    <a
+      onClick={fn}
+      style={{ color: "var(--mp-accent)", fontWeight: 700, cursor: "pointer" }}
+    >
+      {text}
+    </a>
+  );
+
+  const heading = (title, sub) => (
+    <div>
+      <h1 style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-.03em" }}>{title}</h1>
+      <p style={{ color: "var(--mp-mute)", marginTop: 4 }}>{sub}</p>
+    </div>
+  );
+
+  const fieldStyle = { display: "flex", flexDirection: "column", gap: 6 };
+  const labelStyle = { fontWeight: 700, fontSize: 14 };
+
+  // text on the photo side changes with the view
+  const side =
+    view === "signup"
+      ? { a: "Join your ", b: "CUNY", c: " marketplace", p: "Sell what you do not need and find what you do, right on your campus." }
+      : { a: "Buy & sell within your ", b: "CUNY", c: " community", p: "Textbooks, dorm gear, tickets, tutoring. Just classmates, no strangers." };
+  const bullets = ["Verified with your CUNY email", "Free to list, always", "Meet safely on campus"];
+
+  return (
+    <div className="mp-root" id="page-auth">
+      <div className="mp-page" style={{ paddingTop: 40, paddingBottom: 64 }}>
         {noAccountMsg && (
           <div
             onClick={() => setNoAccountMsg("")}
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(0,0,0,0.55)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 1000,
-              padding: 16,
-            }}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }}
           >
             <div
+              className="mp-card"
               onClick={(e) => e.stopPropagation()}
-              style={{
-                background: "#fff",
-                color: "#1a1a1a",
-                borderRadius: 16,
-                padding: 28,
-                maxWidth: 400,
-                width: "100%",
-                textAlign: "center",
-                boxShadow: "0 10px 40px rgba(0,0,0,0.25)",
-              }}
+              style={{ padding: 28, maxWidth: 400, width: "100%", textAlign: "center" }}
             >
               <h3 style={{ margin: "0 0 18px" }}>{noAccountMsg}</h3>
               <button
-                className="cta-primary-solid"
-                style={{ width: "100%", padding: "12px 0", borderRadius: 10 }}
+                className="mp-btn mp-btn-primary"
+                style={{ width: "100%" }}
                 onClick={() => {
                   setNoAccountMsg("");
                   setView("signup");
@@ -311,14 +326,9 @@ export default function AuthPages() {
                 Sign up
               </button>
               <button
+                className="mp-btn mp-btn-ghost"
+                style={{ width: "100%", marginTop: 10 }}
                 onClick={() => setNoAccountMsg("")}
-                style={{
-                  marginTop: 10,
-                  background: "none",
-                  border: "none",
-                  color: "#555",
-                  cursor: "pointer",
-                }}
               >
                 Close
               </button>
@@ -326,318 +336,165 @@ export default function AuthPages() {
           </div>
         )}
 
-        <div className="auth-card">
-          {error && (
-            <p className="field hint" style={{ color: "#e06565" }}>
-              {error}
-            </p>
-          )}
+        <div className="mp-card mp-auth-card">
+          {/* left: campus photo */}
+          <div className="mp-hero mp-auth-side">
+            <span style={{ alignSelf: "flex-start", padding: "5px 12px", borderRadius: 999, background: "rgba(255,255,255,.16)", fontSize: 12, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>
+              Verified CUNY students only
+            </span>
+            <h2 style={{ fontSize: 40, lineHeight: 1.1, color: "#fff" }}>
+              {side.a}
+              <em style={{ color: "var(--mp-ca)" }}>{side.b}</em>
+              {side.c}
+            </h2>
+            <p style={{ color: "rgba(255,255,255,.9)", maxWidth: 400 }}>{side.p}</p>
+            <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "flex", flexDirection: "column", gap: 10, fontWeight: 600 }}>
+              {bullets.map((b) => (
+                <li key={b} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="m8.5 12.5 2.5 2.5 4.5-5" />
+                  </svg>
+                  {b}
+                </li>
+              ))}
+            </ul>
+          </div>
 
-          {/* ---------- LOGIN ---------- */}
-          {view === "login" && (
-            <div className="auth-view active">
-              <div className="auth-head">
-                <h2>Welcome back</h2>
-                <p>Sign in to your account.</p>
-              </div>
+          {/* right: the form */}
+          <div className="mp-auth-form">
+            <span
+              onClick={() => navigate("/")}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--mp-mute)", fontWeight: 600, cursor: "pointer", alignSelf: "flex-start" }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              Back to home
+            </span>
 
-              {step === "form" && (
-                <form className="auth-body" onSubmit={handleLoginSendCode}>
-                  <div className="field field-input-icon">
-                    <label>CUNY Email</label>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M3 6l9 7 9-7" />
-                      <path d="M21 6v12H3V6" />
-                    </svg>
-                    <input
-                      type="email"
-                      placeholder={emailPlaceholder}
-                      style={{ fontSize: "0.85rem" }}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="auth-submit"
-                    disabled={loading}
-                  >
-                    {loading ? "Sending..." : "Send verification code"}
-                  </button>
-                  <p className="auth-switch">
-                    Don't have an account?{" "}
-                    <a
-                      onClick={() => {
-                        setView("signup");
-                        resetToForm();
-                      }}
-                    >
-                      Sign up
-                    </a>
-                  </p>
-                  <p className="auth-switch">
-                    <a
-                      onClick={() => {
-                        setView("recover");
-                        resetToForm();
-                      }}
-                    >
-                      Can't access your CUNY email?
-                    </a>
-                  </p>
-                </form>
-              )}
-
-              {step === "code" && (
-                <form className="auth-body" onSubmit={handleLoginVerify}>
-                  <p className="field hint">We sent a code to {email}.</p>
-                  <div className="field">
-                    <label>Verification code</label>
-                    <input
-                      type="text"
-                      placeholder="123456"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="auth-submit"
-                    disabled={loading}
-                  >
-                    {loading ? "Verifying..." : "Log In"}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-
-          {/* ---------- RECOVER ---------- */}
-          {view === "recover" && (
-            <div className="auth-view active">
-              <div className="auth-head">
-                <h2>Recover your account</h2>
-                <p>
-                  Enter the backup email you saved in your profile. We'll send
-                  it a one-time code.
-                </p>
-              </div>
-
-              {step === "form" && (
-                <form className="auth-body" onSubmit={handleRecoverSendCode}>
-                  <div className="field">
-                    <label>Backup email</label>
-                    <input
-                      type="email"
-                      placeholder="you@gmail.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="auth-submit"
-                    disabled={loading}
-                  >
-                    {loading ? "Sending..." : "Send verification code"}
-                  </button>
-                  <p className="auth-switch">
-                    <a
-                      onClick={() => {
-                        setView("login");
-                        resetToForm();
-                      }}
-                    >
-                      Back to login
-                    </a>
-                  </p>
-                </form>
-              )}
-
-              {step === "code" && (
-                <form className="auth-body" onSubmit={handleRecoverVerify}>
-                  <p className="field hint">We sent a code to {email}.</p>
-                  <div className="field">
-                    <label>Verification code</label>
-                    <input
-                      type="text"
-                      placeholder="123456"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="auth-submit"
-                    disabled={loading}
-                  >
-                    {loading ? "Verifying..." : "Verify & log in"}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-
-          {/* ---------- SIGNUP ---------- */}
-          {view === "signup" && (
-            <div className="auth-view active">
-              <div className="auth-head">
-                <div className="eyebrow">
-                  <span className="dot-pulse" />
-                  <span>VERIFIED CUNY STUDENTS ONLY</span>
+            {/* ---------- LOGIN ---------- */}
+            {view === "login" && step === "form" && (
+              <form style={{ display: "flex", flexDirection: "column", gap: 16 }} onSubmit={handleLoginSendCode}>
+                {heading("Welcome back", "Sign in to your account.")}
+                <div style={fieldStyle}>
+                  <label style={labelStyle}>CUNY Email</label>
+                  <input className="mp-input" type="email" placeholder={emailPlaceholder} value={email} onChange={(e) => setEmail(e.target.value)} required />
                 </div>
-                <h2>Buy &amp; sell within your own campus.</h2>
-                <p>
-                  Sign up with your campus stu-mail address. We'll send a
-                  one-time code to verify it's really you.
+                <Err />
+                <button type="submit" className="mp-btn mp-btn-primary mp-btn-lg" style={{ width: "100%" }} disabled={loading}>
+                  {loading ? "Sending..." : "Send verification code"}
+                </button>
+                <p style={{ textAlign: "center", color: "var(--mp-mute)" }}>
+                  Don't have an account?{" "}
+                  {link(() => { setView("signup"); resetToForm(); }, "Sign up")}
                 </p>
-              </div>
+                <p style={{ textAlign: "center" }}>
+                  {link(() => { setView("recover"); resetToForm(); }, "Can't access your CUNY email?")}
+                </p>
+              </form>
+            )}
+            {view === "login" && step === "code" && (
+              <form style={{ display: "flex", flexDirection: "column", gap: 16 }} onSubmit={handleLoginVerify}>
+                {heading("Check your CUNY email", `We sent a code to ${email}.`)}
+                <CodeField />
+                <Err />
+                <button type="submit" className="mp-btn mp-btn-primary mp-btn-lg" style={{ width: "100%" }} disabled={loading}>
+                  {loading ? "Verifying..." : "Log In"}
+                </button>
+                <button type="button" className="mp-btn mp-btn-ghost" onClick={resetToForm}>Change email</button>
+              </form>
+            )}
 
-              {step === "form" && (
-                <form className="auth-body" onSubmit={handleSignupSendCode}>
-                  <div className="field">
-                    <label>Full name</label>
-                    <input
-                      type="text"
-                      placeholder="First and last name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </div>
+            {/* ---------- RECOVER ---------- */}
+            {view === "recover" && step === "form" && (
+              <form style={{ display: "flex", flexDirection: "column", gap: 16 }} onSubmit={handleRecoverSendCode}>
+                {heading("Recover your account", "Enter the backup email you saved in your profile. We'll send it a one-time code.")}
+                <div style={fieldStyle}>
+                  <label style={labelStyle}>Backup email</label>
+                  <input className="mp-input" type="email" placeholder="you@gmail.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <Err />
+                <button type="submit" className="mp-btn mp-btn-primary mp-btn-lg" style={{ width: "100%" }} disabled={loading}>
+                  {loading ? "Sending..." : "Send verification code"}
+                </button>
+                <p style={{ textAlign: "center" }}>
+                  {link(() => { setView("login"); resetToForm(); }, "Back to login")}
+                </p>
+              </form>
+            )}
+            {view === "recover" && step === "code" && (
+              <form style={{ display: "flex", flexDirection: "column", gap: 16 }} onSubmit={handleRecoverVerify}>
+                {heading("Check your backup email", `We sent a code to ${email}.`)}
+                <CodeField />
+                <Err />
+                <button type="submit" className="mp-btn mp-btn-primary mp-btn-lg" style={{ width: "100%" }} disabled={loading}>
+                  {loading ? "Verifying..." : "Verify & log in"}
+                </button>
+              </form>
+            )}
 
-                  <div className="field">
-                    <label>Which CUNY do you go to?</label>
-                    <select
-                      value={campusId}
-                      onChange={(e) => setCampusId(e.target.value)}
-                      required
-                    >
-                      <option value="">Select your campus...</option>
-                      {campuses.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="field">
-                    <label>What year are you in?</label>
-                    <select
-                      value={year}
-                      onChange={(e) => setYear(e.target.value)}
-                      required
-                    >
+            {/* ---------- SIGNUP ---------- */}
+            {view === "signup" && step === "form" && (
+              <form style={{ display: "flex", flexDirection: "column", gap: 16 }} onSubmit={handleSignupSendCode}>
+                {heading("Create your account", "Only CUNY students can join. It takes a minute.")}
+                <div style={fieldStyle}>
+                  <label style={labelStyle}>Full name</label>
+                  <input className="mp-input" type="text" placeholder="First and last name" value={name} onChange={(e) => setName(e.target.value)} required />
+                </div>
+                <div style={fieldStyle}>
+                  <label style={labelStyle}>Which CUNY do you go to?</label>
+                  <select className="mp-input" value={campusId} onChange={(e) => setCampusId(e.target.value)} required>
+                    <option value="">Select your campus...</option>
+                    {campuses.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div style={fieldStyle}>
+                    <label style={labelStyle}>What year are you in?</label>
+                    <select className="mp-input" value={year} onChange={(e) => setYear(e.target.value)} required>
                       <option value="">Select your year...</option>
                       {YEARS.map((y) => (
-                        <option key={y} value={y}>
-                          {y}
-                        </option>
+                        <option key={y} value={y}>{y}</option>
                       ))}
                     </select>
                   </div>
-
-                  <div className="field">
-                    <label>When are you graduating?</label>
-                    <input
-                      type="month"
-                      value={expectedGraduation}
-                      onChange={(e) => setExpectedGraduation(e.target.value)}
-                      required
-                    />
+                  <div style={fieldStyle}>
+                    <label style={labelStyle}>When are you graduating?</label>
+                    <input className="mp-input" type="month" value={expectedGraduation} onChange={(e) => setExpectedGraduation(e.target.value)} required />
                   </div>
-
-                  <div className="field field-input-icon">
-                    <label>School email</label>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M3 6l9 7 9-7" />
-                      <path d="M21 6v12H3V6" />
-                    </svg>
-                    <input
-                      type="email"
-                      placeholder={signupPlaceholder}
-                      style={{ fontSize: "0.85rem" }}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="auth-submit"
-                    disabled={loading}
-                  >
-                    {loading ? "Sending..." : "Send verification code"}
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.4"
-                      strokeLinecap="round"
-                    >
-                      <path d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
-                  </button>
-
-                  <p className="field hint" style={{ marginTop: 14 }}>
-                    Only your campus stu-mail address can create an account.
-                  </p>
-                  <p className="auth-switch">
-                    Already have an account?{" "}
-                    <a
-                      onClick={() => {
-                        setView("login");
-                        resetToForm();
-                      }}
-                    >
-                      Log in
-                    </a>
-                  </p>
-                </form>
-              )}
-
-              {step === "code" && (
-                <form className="auth-body" onSubmit={handleSignupVerify}>
-                  <p className="field hint">We sent a code to {email}.</p>
-                  <div className="field">
-                    <label>Verification code</label>
-                    <input
-                      type="text"
-                      placeholder="123456"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="auth-submit"
-                    disabled={loading}
-                  >
-                    {loading
-                      ? "Creating account..."
-                      : "Verify & create account"}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
+                </div>
+                <div style={fieldStyle}>
+                  <label style={labelStyle}>School email</label>
+                  <input className="mp-input" type="email" placeholder={signupPlaceholder} value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <Err />
+                <button type="submit" className="mp-btn mp-btn-primary mp-btn-lg" style={{ width: "100%" }} disabled={loading}>
+                  {loading ? "Sending..." : "Send verification code"}
+                </button>
+                <p style={{ textAlign: "center", color: "var(--mp-mute)", fontSize: 14 }}>
+                  Only your campus stu-mail address can create an account.
+                </p>
+                <p style={{ textAlign: "center", color: "var(--mp-mute)" }}>
+                  Already have an account?{" "}
+                  {link(() => { setView("login"); resetToForm(); }, "Log in")}
+                </p>
+              </form>
+            )}
+            {view === "signup" && step === "code" && (
+              <form style={{ display: "flex", flexDirection: "column", gap: 16 }} onSubmit={handleSignupVerify}>
+                {heading("Check your CUNY email", `We sent a code to ${email}.`)}
+                <CodeField />
+                <Err />
+                <button type="submit" className="mp-btn mp-btn-primary mp-btn-lg" style={{ width: "100%" }} disabled={loading}>
+                  {loading ? "Creating account..." : "Verify & create account"}
+                </button>
+                <button type="button" className="mp-btn mp-btn-ghost" onClick={resetToForm}>Change email</button>
+              </form>
+            )}
+          </div>
         </div>
       </div>
     </div>

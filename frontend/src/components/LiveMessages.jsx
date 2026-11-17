@@ -15,6 +15,15 @@ async function apiFetch(path, options = {}) {
   return res.json();
 }
 
+// Profile photo if the user has one, otherwise their first initial
+function Avatar({ name, url }) {
+  return (
+    <span className="msg-avatar">
+      {url ? <img src={url} alt="" /> : (name || "?")[0].toUpperCase()}
+    </span>
+  );
+}
+
 export default function LiveMessagesTab({ fallback }) {
   const [searchParams] = useSearchParams();
   const [ready, setReady] = useState(false);
@@ -206,11 +215,14 @@ export default function LiveMessagesTab({ fallback }) {
               }
               onClick={() => openConvo(token, c)}
             >
-              <p className="msg-name">
-                {c.otherUserName}{c.unread > 0 ? ` (${c.unread})` : ""}
-              </p>
-              <p className="msg-subject">{c.listingTitle}</p>
-              <p className="msg-preview">{c.lastMessage}</p>
+              <Avatar name={c.otherUserName} url={c.otherUserAvatar} />
+              <div className="msg-item-body">
+                <p className="msg-name">
+                  {c.otherUserName}{c.unread > 0 ? ` (${c.unread})` : ""}
+                </p>
+                <p className="msg-subject">{c.listingTitle}</p>
+                <p className="msg-preview">{c.lastMessage}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -219,8 +231,11 @@ export default function LiveMessagesTab({ fallback }) {
           {active ? (
             <>
               <div className="msg-thread-head">
-                <p className="msg-name">{active.otherUserName}</p>
-                <p className="msg-subject">Re: {active.listingTitle}</p>
+                <Avatar name={active.otherUserName} url={active.otherUserAvatar} />
+                <div>
+                  <p className="msg-name">{active.otherUserName}</p>
+                  <p className="msg-subject">Re: {active.listingTitle}</p>
+                </div>
               </div>
               <div className="msg-bubbles">
                 {messages.map((m) => (

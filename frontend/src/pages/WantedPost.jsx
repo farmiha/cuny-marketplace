@@ -72,11 +72,8 @@ export default function WantedPost() {
   }
 
   return (
-    <div
-      className="page"
-      id="page-wanted-post"
-      style={{ maxWidth: 640, margin: "0 auto" }}
-    >
+    <div className="mp-root">
+    <div className="mp-page" id="page-wanted-post" style={{ maxWidth: 680, margin: "0 auto" }}>
       <span className="back-link" onClick={() => navigate("/wanted")}>
         <svg
           viewBox="0 0 24 24"
@@ -123,21 +120,14 @@ export default function WantedPost() {
               value={form.maxBudget}
               onChange={(e) =>
                 // whole dollars only: drop anything that isn't a digit
-                setForm({
-                  ...form,
-                  maxBudget: e.target.value.replace(/\D/g, ""),
-                })
+                setForm({ ...form, maxBudget: e.target.value.replace(/\D/g, "") })
               }
             />
           </div>
 
           <div className="field">
             <label>Category</label>
-            <select
-              value={form.category}
-              onChange={update("category")}
-              required
-            >
+            <select value={form.category} onChange={update("category")} required>
               <option value="">Select a category...</option>
               {CATEGORIES.map((c) => (
                 <option key={c}>{c}</option>
@@ -160,7 +150,7 @@ export default function WantedPost() {
             {error && (
               <p style={{ color: "crimson", marginBottom: 10 }}>{error}</p>
             )}
-            <button type="submit" className="auth-submit" disabled={saving}>
+            <button type="submit" className="mp-btn mp-btn-primary" style={{ width: "100%", justifyContent: "center", padding: "14px 20px" }} disabled={saving}>
               {saving ? "Posting..." : "Post Request"}
             </button>
           </div>
@@ -173,6 +163,7 @@ export default function WantedPost() {
           onClose={() => navigate("/wanted")}
         />
       )}
+    </div>
     </div>
   );
 }
