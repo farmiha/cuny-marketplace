@@ -1,15 +1,33 @@
-.reco-panel { background:#fff; border:1px solid rgba(36,29,23,.12); border-top:4px solid #b6a7d5; border-radius:16px; padding:20px; margin:0 0 24px; }
-.reco-head { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:flex-start; }
-.reco-head h3 { margin:6px 0; }
-.reco-head p, .reco-note { color:#7a6f61; font-size:13px; margin:0; }
-.reco-tag { color:#1e3a73; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
-.reco-buttons { display:flex; gap:10px; flex-wrap:wrap; }
-.reco-btn { border:1px solid rgba(36,29,23,.2); background:transparent; color:#1e3a73; border-radius:10px; padding:10px 14px; font-weight:700; font-size:13px; cursor:pointer; }
-.reco-btn.primary { background:#1e3a73; border-color:#1e3a73; color:#fff; }
-.reco-scores { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin:16px 0 10px; }
-.reco-scores > div { background:#f6f3fa; border-radius:10px; padding:10px; }
-.reco-scores span, .reco-scores small { display:block; font-size:10px; color:#7a6f61; }
-.reco-scores strong { font-size:22px; color:#1e3a73; }
-.reco-log { max-height:170px; overflow-y:auto; font-size:12px; line-height:1.8; }
-.reco-panel summary { cursor:pointer; font-size:13px; font-weight:600; color:#1e3a73; }
-@media (max-width:800px) { .reco-scores { grid-template-columns:repeat(2,1fr); } }
+/* Recommendation panel, new look. Uses the design colors from mp.css, so it follows light and dark mode. */
+.reco-panel {
+  background: var(--mp-card, #fff);
+  color: var(--mp-ink, #14182B);
+  border: 1px solid var(--mp-line, #EDE6DA);
+  border-radius: 24px;
+  padding: 22px 24px;
+  box-shadow: 0 10px 30px rgba(20, 24, 43, 0.06);
+}
+.reco-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+.reco-tag {
+  display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--mp-accent, #4A62C9); background: var(--mp-accent-soft, #E8ECFA);
+  padding: 4px 10px; border-radius: 999px; margin-bottom: 8px;
+}
+.reco-panel h3 { font-family: "Fraunces", Georgia, serif; font-size: 22px; margin: 0 0 6px; color: var(--mp-ink, #14182B); }
+.reco-panel p { margin: 0; font-size: 14px; color: var(--mp-mute, #5B6178); max-width: 560px; }
+.reco-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+.reco-btn {
+  font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; padding: 10px 18px; border-radius: 999px;
+  background: transparent; color: var(--mp-ink, #14182B); border: 1.5px solid var(--mp-line, #EDE6DA);
+}
+.reco-btn:hover { border-color: var(--mp-accent, #4A62C9); }
+.reco-btn.primary { background: var(--mp-accent, #4A62C9); color: var(--mp-cink, #fff); border-color: transparent; }
+.reco-scores { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 18px 0 10px; }
+.reco-scores > div { background: var(--mp-bg, #FBF7F0); border: 1px solid var(--mp-line, #EDE6DA); border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.reco-scores span { font-size: 12px; font-weight: 700; color: var(--mp-mute, #5B6178); }
+.reco-scores strong { font-family: "Fraunces", Georgia, serif; font-size: 26px; color: var(--mp-ink, #14182B); }
+.reco-scores small { font-size: 12px; color: var(--mp-mute, #5B6178); }
+.reco-panel .reco-note { font-size: 13px; margin: 6px 0; }
+.reco-panel details { margin-top: 8px; }
+.reco-panel summary { cursor: pointer; font-weight: 700; font-size: 14px; color: var(--mp-accent, #4A62C9); }
+.reco-log { margin: 10px 0 0; padding-left: 20px; font-size: 13px; color: var(--mp-mute, #5B6178); display: grid; gap: 4px; }

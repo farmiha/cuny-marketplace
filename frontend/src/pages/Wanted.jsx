@@ -55,84 +55,80 @@ export default function Wanted() {
   }, [source, search, category]);
 
   return (
-    <div className="page" id="page-wanted">
-      <div className="browse-head">
-        <div>
-          <h2>Wanted</h2>
-          <p className="sub">
-            Can't find it in Browse? Ask for it. Students with one to sell can
-            answer with their listing.
-          </p>
-        </div>
-        <Link
-          to="/wanted/new"
-          className="cta-primary"
-          style={{ padding: "11px 20px" }}
-          onClick={(e) => {
-            // logged out visitors get a popup instead of the form
-            if (!loggedIn) {
-              e.preventDefault();
-              setShowSignIn(true);
-            }
-          }}
-        >
-          Post a Request
-        </Link>
-      </div>
-
-      {loggedIn && (
-        <div className="wanted-tabs">
-          <button
-            className={"wanted-tab" + (tab === "all" ? " active" : "")}
-            onClick={() => setTab("all")}
-          >
-            All requests
-          </button>
-          <button
-            className={"wanted-tab" + (tab === "mine" ? " active" : "")}
-            onClick={() => setTab("mine")}
-          >
-            My requests
-          </button>
-        </div>
-      )}
-
-      <div className="filters-row" style={{ gridTemplateColumns: "1.6fr 1fr" }}>
-        <input
-          type="text"
-          placeholder="Search requests... (e.g., calculator, textbook)"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <select value={category} onChange={(e) => setCategory(e.target.value)}>
-          <option>All categories</option>
-          {CATEGORIES.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-      </div>
-
-      {status === "loading" && <p className="sub">Loading...</p>}
-      {status === "error" && (
-        <p className="sub">Couldn't load requests. Try refreshing the page.</p>
-      )}
-
-      {status === "ready" && (
-        <div className="wanted-grid">
-          {filtered.map((r) => (
-            <WantedCard key={r.id} request={r} myId={myId} />
-          ))}
-          {filtered.length === 0 && (
-            <p className="sub" style={{ gridColumn: "1 / -1" }}>
-              {tab === "mine"
-                ? "You haven't posted any requests yet."
-                : requests.length === 0
-                  ? "No one is looking for anything right now. Be the first to post a request."
-                  : "No requests match your filters yet."}
+    <div className="mp-root" id="page-wanted">
+      <div className="mp-page">
+        <div className="mp-sec-head" style={{ alignItems: "flex-start" }}>
+          <div>
+            <h1 style={{ fontSize: 40 }}>Wanted</h1>
+            <p style={{ color: "var(--mp-mute)", marginTop: 4, maxWidth: 560 }}>
+              Can't find it in Browse? Ask for it. Students with one to sell can answer with their listing.
             </p>
-          )}
+          </div>
+          <Link
+            to="/wanted/new"
+            className="mp-btn mp-btn-primary"
+            onClick={(e) => {
+              // logged out visitors get a popup instead of the form
+              if (!loggedIn) {
+                e.preventDefault();
+                setShowSignIn(true);
+              }
+            }}
+          >
+            Post a request
+          </Link>
         </div>
-      )}
+
+        {loggedIn && (
+          <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+            <button type="button" className={"mp-chip" + (tab === "all" ? " mp-on" : "")} onClick={() => setTab("all")}>
+              All requests
+            </button>
+            <button type="button" className={"mp-chip" + (tab === "mine" ? " mp-on" : "")} onClick={() => setTab("mine")}>
+              My requests
+            </button>
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
+          <input
+            className="mp-input"
+            style={{ flex: "1 1 320px", width: "auto" }}
+            type="text"
+            placeholder="Search requests (e.g., calculator, textbook)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select className="mp-input" style={{ width: 220 }} value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option>All categories</option>
+            {CATEGORIES.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+
+        {status === "loading" && <p style={{ color: "var(--mp-mute)" }}>Loading...</p>}
+        {status === "error" && (
+          <p style={{ color: "var(--mp-mute)" }}>Couldn't load requests. Try refreshing the page.</p>
+        )}
+
+        {status === "ready" && (
+          <div className="mp-grid3">
+            {filtered.map((r) => (
+              <WantedCard key={r.id} request={r} myId={myId} />
+            ))}
+            {filtered.length === 0 && (
+              <div className="mp-card" style={{ gridColumn: "1 / -1", padding: 36, textAlign: "center", color: "var(--mp-mute)" }}>
+                {tab === "mine"
+                  ? "You haven't posted any requests yet."
+                  : requests.length === 0
+                    ? "No one is looking for anything right now. Be the first to post a request."
+                    : "No requests match your filters yet."}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {showSignIn && (
         <SignInModal

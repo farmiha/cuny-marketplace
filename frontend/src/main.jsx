@@ -5,6 +5,7 @@ import "./index.css";
 import "./styles/app.css";
 import "./styles/cart.css";
 import "./styles/wanted.css";
+import "./styles/mp.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

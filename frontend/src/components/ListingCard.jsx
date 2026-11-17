@@ -2,110 +2,97 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import SignInModal from "./SignInModal";
-import CategoryBadge from "./CategoryBadge";
-import PriceBadge from "./PriceBadge";
-import SaveButton from "./SaveButton";
+import FollowButton from "./FollowButton";
 import { CATEGORY_ICON_PATHS } from "../data/listings";
 
-export default function ListingCard({ listing }) {
+// soft background color for each category (same as the design)
+const BGS = {
+  Textbooks: "#DCE3FF",
+  Electronics: "#D8F2E6",
+  Furniture: "#FFE9B8",
+  Clothing: "#FFD9D9",
+  Other: "#EADFF5",
+  Sports: "#D6EEF7",
+  Services: "#FDE3C8",
+};
+
+export default function ListingCard({ listing, showMessage = true }) {
   const navigate = useNavigate();
 
   // who is logged in, so we can tell if this is my own listing
   const [myId, setMyId] = useState(null);
   useEffect(() => {
-    supabase.auth
-      .getSession()
-      .then(({ data }) => setMyId(data.session?.user?.id || null));
+    supabase.auth.getSession().then(({ data }) => setMyId(data.session?.user?.id || null));
   }, []);
   const isMine = !!myId && listing.sellerId === myId;
-
   const [showSignIn, setShowSignIn] = useState(false);
-
-  const iconPath =
-    CATEGORY_ICON_PATHS[listing.category] || CATEGORY_ICON_PATHS.Other;
+  const iconPath = CATEGORY_ICON_PATHS[listing.category] || CATEGORY_ICON_PATHS.Other;
 
   // the backend sends seller as { name }, the old sample data used a plain string
   const sellerName =
     typeof listing.seller === "string" ? listing.seller : listing.seller?.name;
-  const sellerInitial = sellerName
-    ? sellerName.trim().charAt(0).toUpperCase()
-    : "";
+  const sellerInitial = sellerName ? sellerName.trim().charAt(0).toUpperCase() : "";
+
+  const meta = [
+    listing.condition,
+    listing.location,
+    !listing.condition ? listing.postedAt : null,
+    typeof listing.saveCount === "number" ? `${listing.saveCount} saved` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <Link
       to={`/listing/${listing.id}`}
-      style={{ textDecoration: "none", color: "inherit" }}
+      style={{ textDecoration: "none", color: "inherit", display: "block" }}
     >
-      <div className="listing">
-        <div className="thumb">
-          {listing.isNew && <span className="badge-new">JUST IN</span>}
-          <PriceBadge price={listing.price} />
+      <div className="mp-root">
+      <div className="mp-lcard" style={{ position: "relative" }}>
+        <div className="mp-limg" style={{ background: BGS[listing.category] || BGS.Other }}>
+          <span className="mp-tag">{listing.isNew ? "Just in" : listing.category}</span>
           {/* show the real photo if the listing has one, otherwise the category icon */}
           {listing.imageUrl ? (
             <img
               src={listing.imageUrl}
               alt={listing.title}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", borderRadius: 20 }}
             />
           ) : (
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-            >
+            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d={iconPath} />
             </svg>
           )}
         </div>
 
-        <div className="listing-body">
-          {/* category on the left, heart and number of saves on the right */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <CategoryBadge category={listing.category} />
-            <SaveButton
-              listingId={listing.id}
-              count={listing.saveCount}
-              sellerId={listing.sellerId}
-            />
-          </div>
-          <p className="listing-title">{listing.title}</p>
+        <div className="mp-lbody">
+          <div className="mp-lprice">${listing.price}</div>
+          <div className="mp-ltitle">{listing.title}</div>
+          <div className="mp-lmeta">{meta}</div>
+        </div>
 
-          <div className="listing-footer">
-            <span className="listing-meta">
-              {listing.condition
-                ? `Condition: ${listing.condition}`
-                : listing.location}
+        {/* who is selling it, with a small Follow button like the design */}
+        {sellerName && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: showMessage ? "0 18px 14px" : "0 18px 18px" }}>
+            <span className="mp-avatar" style={{ width: 26, height: 26, fontSize: 11, flex: "none" }}>
+              {sellerInitial}
             </span>
-            <span className="listing-meta">
-              {listing.condition ? listing.location : listing.postedAt}
-            </span>
-          </div>
-
-          {/* who is selling it: initial in a circle and "Sold by" name */}
-          <div className="seller" style={{ marginTop: 12 }}>
-            <span className="avatar">{sellerInitial}</span>
-            <span className="listing-meta">
+            <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: "var(--mp-mute)" }}>
               Sold by {isMine ? "you" : sellerName}
             </span>
+            {listing.sellerId && !isMine && (
+              <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                <FollowButton sellerId={listing.sellerId} sellerName={sellerName} chip />
+              </span>
+            )}
           </div>
+        )}
 
-          {listing.sellerId && !isMine && (
+        {showMessage && listing.sellerId && !isMine && (
+          <div style={{ padding: "0 18px 18px" }}>
             <button
-              className="cta-primary-solid"
-              style={{
-                marginTop: 14,
-                width: "100%",
-                padding: "10px 0",
-                borderRadius: 10,
-                fontSize: "0.85rem",
-              }}
+              className="mp-btn mp-btn-primary"
+              style={{ width: "100%" }}
               onClick={(e) => {
                 e.preventDefault();
                 // logged out visitors get a popup instead
@@ -114,14 +101,15 @@ export default function ListingCard({ listing }) {
                   return;
                 }
                 navigate(
-                  `/dashboard?tab=messages&listingId=${listing.id}&receiverId=${listing.sellerId}`,
+                  `/dashboard?tab=messages&listingId=${listing.id}&receiverId=${listing.sellerId}`
                 );
               }}
             >
               Message seller
             </button>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
       </div>
 
       {showSignIn && (

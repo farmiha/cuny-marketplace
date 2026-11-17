@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { apiFetch } from "../lib/apiClient";
-import BlockedModal from "./BlockedModal";
 
 // Follow / Following button for a seller.
 // onChange(+1 or -1) lets the page update its follower count right away.
-export default function FollowButton({ sellerId, sellerName, onChange }) {
+export default function FollowButton({ sellerId, sellerName, onChange, chip = false }) {
   const navigate = useNavigate();
   const [myId, setMyId] = useState(null);
   const [following, setFollowing] = useState(false);
@@ -67,14 +66,18 @@ export default function FollowButton({ sellerId, sellerName, onChange }) {
   return (
     <>
       <button
-        className={following ? "view-all" : "cta-primary-solid"}
-        style={{ padding: "8px 20px", borderRadius: 10 }}
+        className={chip ? "mp-chip" : following ? "view-all" : "cta-primary-solid"}
+        style={chip ? { height: 28, fontSize: 12, padding: "0 12px" } : { padding: "8px 20px", borderRadius: 10 }}
         onClick={handleClick}
         disabled={busy}
       >
         {following ? "Following" : "Follow"}
       </button>
-      {refused && <BlockedModal sellerName={sellerName} />}
+      {refused && (
+        <span className="sub" style={{ marginLeft: 10 }}>
+          You can't follow this seller.
+        </span>
+      )}
 
       {confirming && (
         <div
