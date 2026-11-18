@@ -89,6 +89,37 @@ router.get("/me/lists", async (req, res) => {
   });
 });
 
+// the people the logged in user has blocked (shown in Profile > Safety)
+router.get("/me/blocks", async (req, res) => {
+  const authUser = await getAuthUser(req);
+  if (!authUser) return res.status(401).json({ message: "Not logged in" });
+
+  const blocks = await prisma.followBlock.findMany({
+    where: { blockerId: authUser.id },
+    include: { blocked: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  res.json({
+    blocks: blocks.map((b) => ({
+      id: b.blocked.id,
+      name: b.blocked.name || "CUNY student",
+    })),
+  });
+});
+
+// unblock someone
+router.delete("/block/:userId", async (req, res) => {
+  const authUser = await getAuthUser(req);
+  if (!authUser) return res.status(401).json({ message: "Not logged in" });
+
+  await prisma.followBlock.deleteMany({
+    where: { blockerId: authUser.id, blockedId: req.params.userId },
+  });
+
+  res.json({ blocked: false });
+});
+
 // who follows this user (names only, public like the follower count)
 router.get("/list/:userId", async (req, res) => {
   const rows = await prisma.follow.findMany({

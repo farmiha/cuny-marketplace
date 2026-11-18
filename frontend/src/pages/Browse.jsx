@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { CATEGORIES } from "../data/campusThemes";
+import { CATEGORIES, getCampusKey } from "../data/campusThemes";
 import ListingCard from "../components/ListingCard";
 import SignInModal from "../components/SignInModal";
 import RecommendationPanel from "../components/RecommendationPanel";
-import { getListings } from "../lib/apiClient";
+import { getListings, apiFetch } from "../lib/apiClient";
 import { supabase } from "../lib/supabaseClient";
 import { useCart } from "../hooks/useCart";
+import { useCampusTheme } from "../hooks/useCampusTheme";
+import { useShopAll } from "../hooks/useShopAll";
 import { useRecommendations } from "../hooks/useRecommendations";
 import { recommendOrder, syncInterest } from "../lib/recommendationEngine";
 
@@ -33,11 +35,41 @@ export default function Browse() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
 
+  // the campus picked in the navbar, and the "Shop other CUNY campuses" switch on Profile
+  const { campus, theme } = useCampusTheme();
+  const [shopAll] = useShopAll();
+  const [campusKeyById, setCampusKeyById] = useState({}); // database campus id -> theme key
+  useEffect(() => {
+    apiFetch("/campuses")
+      .then((rows) => {
+        const map = {};
+        rows.forEach((c) => (map[c.id] = getCampusKey(c.name)));
+        setCampusKeyById(map);
+      })
+      .catch(() => {});
+  }, []);
+  // only your own campus's listings, unless you turned on "Shop other CUNY campuses"
+  // (or you're browsing "All CUNY")
+  const campusOnly =
+    !shopAll && campus !== "all" && Object.keys(campusKeyById).length > 0;
+
+  // the sellers this person follows, for the "Following only" filter
+  const [followingIds, setFollowingIds] = useState([]);
+  const [followingOnly, setFollowingOnly] = useState(false);
+
   const { cart, loading: cartLoading } = useCart();
   const reco = useRecommendations(listings);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setLoggedIn(!!data.session));
+    supabase.auth.getSession().then(({ data }) => {
+      setLoggedIn(!!data.session);
+      if (!data.session) return;
+      apiFetch("/follows/me/lists", {
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
+      })
+        .then((res) => setFollowingIds(res.following.map((p) => p.id)))
+        .catch(() => {});
+    });
   }, []);
 
   // get the real listings from the backend when the page loads
@@ -70,11 +102,19 @@ export default function Browse() {
       l.title.toLowerCase().includes(search.toLowerCase()),
     );
 
+    if (campusOnly) {
+      items = items.filter((l) => campusKeyById[l.campusId] === campus);
+    }
+    if (followingOnly) {
+      items = items.filter((l) => followingIds.includes(l.sellerId));
+    }
     if (category !== "All categories") {
       items = items.filter((l) => l.category === category);
     }
-    if (minPrice !== "") items = items.filter((l) => l.price >= Number(minPrice));
-    if (maxPrice !== "") items = items.filter((l) => l.price <= Number(maxPrice));
+    if (minPrice !== "")
+      items = items.filter((l) => l.price >= Number(minPrice));
+    if (maxPrice !== "")
+      items = items.filter((l) => l.price <= Number(maxPrice));
     // listings without a condition always show
     items = items.filter((l) => !l.condition || conds.includes(l.condition));
 
@@ -88,12 +128,37 @@ export default function Browse() {
       items = [...items].sort((a, b) => b.price - a.price);
     }
     return items;
-  }, [listings, search, category, sort, reco.appliedScores, minPrice, maxPrice, conds]);
+  }, [
+    listings,
+    search,
+    category,
+    sort,
+    reco.appliedScores,
+    minPrice,
+    maxPrice,
+    conds,
+    campusOnly,
+    campusKeyById,
+    campus,
+    followingOnly,
+    followingIds,
+  ]);
 
   // go back to the first 8 whenever the filters or the ranking change
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [search, category, sort, reco.appliedScores, minPrice, maxPrice, conds]);
+  }, [
+    search,
+    category,
+    sort,
+    reco.appliedScores,
+    minPrice,
+    maxPrice,
+    conds,
+    campusOnly,
+    campus,
+    followingOnly,
+  ]);
 
   // when the invisible marker under the grid scrolls into view, show 8 more
   useEffect(() => {
@@ -113,7 +178,9 @@ export default function Browse() {
   const hasMore = visibleCount < filtered.length;
 
   const toggleCond = (c) =>
-    setConds((cur) => (cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c]));
+    setConds((cur) =>
+      cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c],
+    );
   const clearFilters = () => {
     setMinPrice("");
     setMaxPrice("");
@@ -131,6 +198,16 @@ export default function Browse() {
             <p style={{ color: "var(--mp-mute)", marginTop: 4 }}>
               Filter by search, category and sort order.
             </p>
+            {campusOnly && (
+              <p style={{ color: "var(--mp-mute)", marginTop: 4 }}>
+                Showing {theme.full} listings only. Turn on "Shop other CUNY
+                campuses" in your{" "}
+                <Link to="/profile" style={{ textDecoration: "underline" }}>
+                  Profile
+                </Link>{" "}
+                to see every campus.
+              </p>
+            )}
           </div>
           <Link
             to="/post"
@@ -182,7 +259,9 @@ export default function Browse() {
           </select>
         </div>
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18 }}>
+        <div
+          style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18 }}
+        >
           {["All categories", ...CATEGORIES].map((c) => (
             <button
               key={c}
@@ -193,26 +272,81 @@ export default function Browse() {
               {c === "All categories" ? "All" : c}
             </button>
           ))}
+          {loggedIn && (
+            <button
+              type="button"
+              className={"mp-chip" + (followingOnly ? " mp-on" : "")}
+              aria-pressed={followingOnly}
+              onClick={() => setFollowingOnly((v) => !v)}
+            >
+              Following only
+            </button>
+          )}
         </div>
 
         <div className="mp-browse-layout">
           {/* filters */}
           <aside className="mp-card mp-filters">
             <h3 style={{ fontSize: 15 }}>Price</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
-              <input className="mp-input" type="number" min="0" placeholder="Min" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
-              <input className="mp-input" type="number" min="0" placeholder="Max" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 8,
+                marginTop: 8,
+              }}
+            >
+              <input
+                className="mp-input"
+                type="number"
+                min="0"
+                placeholder="Min"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+              />
+              <input
+                className="mp-input"
+                type="number"
+                min="0"
+                placeholder="Max"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+              />
             </div>
             <h3 style={{ fontSize: 15, marginTop: 20 }}>Condition</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                marginTop: 8,
+              }}
+            >
               {CONDITIONS.map((c) => (
-                <label key={c} style={{ display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>
-                  <input type="checkbox" checked={conds.includes(c)} onChange={() => toggleCond(c)} />
+                <label
+                  key={c}
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={conds.includes(c)}
+                    onChange={() => toggleCond(c)}
+                  />
                   {c}
                 </label>
               ))}
             </div>
-            <button type="button" className="mp-btn mp-btn-ghost" style={{ width: "100%", marginTop: 20 }} onClick={clearFilters}>
+            <button
+              type="button"
+              className="mp-btn mp-btn-ghost"
+              style={{ width: "100%", marginTop: 20 }}
+              onClick={clearFilters}
+            >
               Clear filters
             </button>
           </aside>
@@ -228,7 +362,14 @@ export default function Browse() {
               ))}
             </div>
             {filtered.length === 0 && (
-              <div className="mp-card" style={{ padding: 36, textAlign: "center", color: "var(--mp-mute)" }}>
+              <div
+                className="mp-card"
+                style={{
+                  padding: 36,
+                  textAlign: "center",
+                  color: "var(--mp-mute)",
+                }}
+              >
                 No listings match your filters yet.
               </div>
             )}
@@ -237,7 +378,13 @@ export default function Browse() {
             {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
 
             {!hasMore && filtered.length > PAGE_SIZE && (
-              <p style={{ textAlign: "center", marginTop: 24, color: "var(--mp-mute)" }}>
+              <p
+                style={{
+                  textAlign: "center",
+                  marginTop: 24,
+                  color: "var(--mp-mute)",
+                }}
+              >
                 You've seen all {filtered.length} listings.
               </p>
             )}

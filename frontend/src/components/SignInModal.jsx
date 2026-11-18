@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 
 // A small popup that tells a logged out visitor they need to sign in.
@@ -11,63 +12,48 @@ export default function SignInModal({ message, onClose }) {
     e.stopPropagation();
   };
 
-  return (
+  // shown on top of everything (outside any card), same style as the other popups
+  return createPortal(
     <div
+      className="mp-root cm-modal-overlay"
       onClick={(e) => {
         stop(e);
         onClose();
       }}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.55)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-        padding: 16,
-      }}
     >
       <div
+        className="cm-modal cm-modal-small"
+        role="alertdialog"
+        aria-modal="true"
+        aria-label="Sign in required"
         onClick={stop}
-        style={{
-          background: "#fff",
-          color: "#1a1a1a",
-          borderRadius: 16,
-          padding: 28,
-          maxWidth: 400,
-          width: "100%",
-          textAlign: "center",
-          boxShadow: "0 10px 40px rgba(0,0,0,0.25)",
-        }}
       >
-        <h3 style={{ margin: "0 0 18px" }}>{message}</h3>
-        <button
-          className="cta-primary-solid"
-          style={{ width: "100%", padding: "12px 0", borderRadius: 10 }}
-          onClick={(e) => {
-            stop(e);
-            navigate("/login");
-          }}
-        >
-          Sign in
-        </button>
-        <button
-          onClick={(e) => {
-            stop(e);
-            onClose();
-          }}
-          style={{
-            marginTop: 10,
-            background: "none",
-            border: "none",
-            color: "#555",
-            cursor: "pointer",
-          }}
-        >
-          Not now
-        </button>
+        <h3>Sign in to continue</h3>
+        <p className="cm-modal-sub">{message}</p>
+        <div className="cm-modal-actions">
+          <button
+            type="button"
+            className="cm-modal-btn"
+            onClick={(e) => {
+              stop(e);
+              onClose();
+            }}
+          >
+            Not now
+          </button>
+          <button
+            type="button"
+            className="cm-modal-btn cm-modal-btn-primary"
+            onClick={(e) => {
+              stop(e);
+              navigate("/login");
+            }}
+          >
+            Sign in
+          </button>
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

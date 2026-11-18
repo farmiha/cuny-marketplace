@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams, useNavigate, Navigate } from "react-router-dom";
 import { CAMPUS_ORDER, CAMPUS_THEMES } from "../data/campusThemes";
 import { useCampusTheme } from "../hooks/useCampusTheme";
@@ -7,6 +8,7 @@ import { apiFetch } from "../lib/apiClient";
 import { createTempClient } from "../lib/tempSupabase";
 import SellerFeedback from "../components/SellerFeedback";
 import FollowStats from "../components/FollowStats";
+import { useShopAll } from "../hooks/useShopAll";
 
 import LiveMessagesTab from "../components/LiveMessages";
 import MyOrders from "../components/MyOrders";
@@ -112,6 +114,177 @@ function maskEmail(email) {
 
 // lets a student save a personal email, so they can still log in after
 // their CUNY stu-mail stops working
+// Safety section: shows how many people the user blocked, in a popup where they can unblock
+function SafetySection() {
+  const [blocks, setBlocks] = useState([]);
+  const [open, setOpen] = useState(false); // the list popup
+  const [confirm, setConfirm] = useState(null); // the person being unblocked (confirm popup)
+  const [busy, setBusy] = useState(false);
+
+  async function getToken() {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token;
+  }
+
+  async function load() {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const res = await apiFetch("/follows/me/blocks", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setBlocks(res.blocks || []);
+    } catch {
+      // keep the old list if it fails
+    }
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  // Escape closes the top popup
+  useEffect(() => {
+    if (!open && !confirm) return undefined;
+    function onKey(e) {
+      if (e.key !== "Escape") return;
+      if (confirm) setConfirm(null);
+      else setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, confirm]);
+
+  async function unblock() {
+    if (!confirm) return;
+    setBusy(true);
+    try {
+      const token = await getToken();
+      await apiFetch(`/follows/block/${confirm.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setBlocks((list) => list.filter((b) => b.id !== confirm.id));
+      setConfirm(null);
+    } catch {
+      // leave everything as it is if it failed
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="profile-section">
+      <h3>Safety</h3>
+      <p className="profile-sub">
+        Report or block a listing or user any time from their page.
+      </p>
+      <button
+        className="view-all"
+        style={{ borderRadius: 10 }}
+        onClick={() => setOpen(true)}
+      >
+        Blocked users ({blocks.length})
+      </button>
+
+      {open &&
+        createPortal(
+          <div
+            className="mp-root cm-modal-overlay"
+            onClick={() => setOpen(false)}
+          >
+            <div
+              className="cm-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Blocked users"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3>Blocked users</h3>
+              <p className="cm-modal-sub">
+                People you've blocked can't follow or message you.
+              </p>
+
+              {blocks.length === 0 ? (
+                <p className="cm-modal-empty">You haven't blocked anyone.</p>
+              ) : (
+                <div className="cm-modal-list">
+                  {blocks.map((b) => (
+                    <div key={b.id} className="cm-modal-row">
+                      <span className="cm-modal-avatar">
+                        {(b.name || "?")[0]}
+                      </span>
+                      <span className="cm-modal-name">{b.name}</span>
+                      <button
+                        type="button"
+                        className="cm-modal-btn"
+                        onClick={() => setConfirm(b)}
+                      >
+                        Unblock
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="cm-modal-actions">
+                <button
+                  type="button"
+                  className="cm-modal-btn cm-modal-btn-primary"
+                  onClick={() => setOpen(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {confirm &&
+        createPortal(
+          <div
+            className="mp-root cm-modal-overlay cm-modal-overlay-top"
+            onClick={() => setConfirm(null)}
+          >
+            <div
+              className="cm-modal cm-modal-small"
+              role="alertdialog"
+              aria-modal="true"
+              aria-label="Confirm unblock"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3>Unblock {confirm.name}?</h3>
+              <p className="cm-modal-sub">
+                Are you sure? They will be able to follow you and message you
+                again.
+              </p>
+              <div className="cm-modal-actions">
+                <button
+                  type="button"
+                  className="cm-modal-btn"
+                  onClick={() => setConfirm(null)}
+                  disabled={busy}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="cm-modal-btn cm-modal-btn-primary"
+                  onClick={unblock}
+                  disabled={busy}
+                >
+                  {busy ? "Unblocking..." : "Yes, unblock"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+    </div>
+  );
+}
+
 function BackupEmailSection({ saved, onSaved }) {
   const [editing, setEditing] = useState(!saved);
   const [step, setStep] = useState("form"); // "form" | "code"
@@ -284,7 +457,7 @@ function ProfileTab() {
   const navigate = useNavigate();
   const { campus, setCampus } = useCampusTheme();
   const [role, setRole] = useState("buyer");
-  const [shopAll, setShopAll] = useState(false);
+  const [shopAll, setShopAll] = useShopAll();
 
   // the logged in user's real profile
   const [profile, setProfile] = useState(null);
@@ -462,15 +635,7 @@ function ProfileTab() {
             onSaved={(backupEmail) => setProfile({ ...profile, backupEmail })}
           />
 
-          <div className="profile-section">
-            <h3>Safety</h3>
-            <p className="profile-sub">
-              Report or block a listing or user any time from their page.
-            </p>
-            <button className="view-all" style={{ borderRadius: 10 }}>
-              Blocked users (0)
-            </button>
-          </div>
+          <SafetySection />
         </div>
       </div>
     </>

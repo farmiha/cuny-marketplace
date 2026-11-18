@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useCampusTheme } from "../hooks/useCampusTheme";
 import { CATEGORIES } from "../data/campusThemes";
@@ -147,194 +148,198 @@ export default function Post() {
   };
 
   return (
-    <div
-      className="page"
-      id="page-post"
-      style={{ maxWidth: 640, margin: "0 auto" }}
-    >
-      <span className="back-link" onClick={() => navigate("/browse")}>
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-        >
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-        Back to browse
-      </span>
-
-      <div className="section-head" style={{ marginBottom: 20 }}>
-        <div>
-          <h2>Post a Listing</h2>
-          <p className="sub">
-            {theme.key === "all"
-              ? "Fill in the details below. Listings are visible to CUNY students."
-              : `Fill in the details below. Listings are visible to ${theme.full} students.`}
-          </p>
-        </div>
-      </div>
-
-      <form className="post-shell" onSubmit={handleSubmit}>
-        <div className="post-grid">
-          <div className="field field-full">
-            <label>Title</label>
-            <input
-              type="text"
-              placeholder="e.g., CSCI 135 Textbook (Good Condition)"
-              value={form.title}
-              onChange={update("title")}
-              required
-            />
-          </div>
-
-          <div className="field">
-            <label>Price ($)</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder="25"
-              value={form.price}
-              onChange={(e) =>
-                // whole dollars only: drop anything that isn't a digit (no decimals)
-                setForm({ ...form, price: e.target.value.replace(/\D/g, "") })
-              }
-              required
-            />
-          </div>
-
-          <div className="field">
-            <label>Category</label>
-            <select
-              value={form.category}
-              onChange={update("category")}
-              required
-            >
-              <option value="">Select a category...</option>
-              {CATEGORIES.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="field">
-            <label>Listing Image</label>
-            <label className="file-input">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <rect x="3" y="5" width="18" height="14" rx="2" />
-                <circle cx="9" cy="11" r="2" />
-                <path d="M21 16l-5-4-4 3-3-2-6 5" />
-              </svg>
-              <span>{imageFile?.name || "Choose file — no file chosen"}</span>
-              <input
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-              />
-            </label>
-          </div>
-
-          <div className="field">
-            <label>Location</label>
-            <input
-              type="text"
-              placeholder="e.g., Hunter West, Library, Dorms"
-              value={form.location}
-              onChange={update("location")}
-            />
-          </div>
-
-          <div className="field">
-            <label>Condition</label>
-            <select value={form.condition} onChange={update("condition")}>
-              <option value="">Select condition...</option>
-              <option>New</option>
-              <option>Like new</option>
-              <option>Good</option>
-              <option>Fair</option>
-            </select>
-          </div>
-
-          <div className="field field-full">
-            <label>Description</label>
-            <textarea
-              rows="4"
-              placeholder="Add details like condition, included accessories, when/where to meet, etc."
-              value={form.description}
-              onChange={update("description")}
-            />
-          </div>
-
-          <div className="field-full">
-            {error && (
-              <p style={{ color: "crimson", marginBottom: 10 }}>{error}</p>
-            )}
-            <button type="submit" className="auth-submit" disabled={saving}>
-              {saving ? "Posting..." : "Post Listing"}
-            </button>
-          </div>
-        </div>
-      </form>
-
-      {/* popup when they reach the daily posting limit */}
-      {limitInfo && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: 16,
-          }}
-          onClick={() => setLimitInfo(null)}
-        >
-          <div
-            style={{
-              background: "#fff",
-              color: "#1a1a1a",
-              borderRadius: 16,
-              padding: 28,
-              maxWidth: 420,
-              width: "100%",
-              textAlign: "center",
-            }}
-            onClick={(e) => e.stopPropagation()}
+    <div className="mp-root">
+      <div
+        className="mp-page"
+        id="page-post"
+        style={{ maxWidth: 680, margin: "0 auto" }}
+      >
+        <span className="back-link" onClick={() => navigate("/browse")}>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
           >
-            <h3 style={{ margin: "0 0 10px" }}>You reached your limit</h3>
-            <p style={{ margin: "0 0 6px" }}>
-              You can post up to 10 listings per day. Try again in 24 hours.
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Back to browse
+        </span>
+
+        <div className="section-head" style={{ marginBottom: 20 }}>
+          <div>
+            <h2>Post a Listing</h2>
+            <p className="sub">
+              {theme.key === "all"
+                ? "Fill in the details below. Listings are visible to CUNY students."
+                : `Fill in the details below. Listings are visible to ${theme.full} students.`}
             </p>
-            {limitInfo.nextPostAt && (
-              <p style={{ margin: "0 0 20px", color: "#555" }}>
-                You can post again on {formatNextPost(limitInfo.nextPostAt)}.
-              </p>
-            )}
-            <button
-              className="cta-primary-solid"
+          </div>
+        </div>
+
+        <form className="post-shell" onSubmit={handleSubmit}>
+          <div className="post-grid">
+            <div className="field field-full">
+              <label>Title</label>
+              <input
+                type="text"
+                placeholder="e.g., CSCI 135 Textbook (Good Condition)"
+                value={form.title}
+                onChange={update("title")}
+                required
+              />
+            </div>
+
+            <div className="field">
+              <label>Price ($)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="25"
+                value={form.price}
+                onChange={(e) =>
+                  // whole dollars only: drop anything that isn't a digit (no decimals)
+                  setForm({ ...form, price: e.target.value.replace(/\D/g, "") })
+                }
+                required
+              />
+            </div>
+
+            <div className="field">
+              <label>Category</label>
+              <select
+                value={form.category}
+                onChange={update("category")}
+                required
+              >
+                <option value="">Select a category...</option>
+                {CATEGORIES.map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="field">
+              <label>Listing Image</label>
+              <label className="file-input">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <circle cx="9" cy="11" r="2" />
+                  <path d="M21 16l-5-4-4 3-3-2-6 5" />
+                </svg>
+                <span>{imageFile?.name || "Choose file — no file chosen"}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                />
+              </label>
+            </div>
+
+            <div className="field">
+              <label>Location</label>
+              <input
+                type="text"
+                placeholder="e.g., Hunter West, Library, Dorms"
+                value={form.location}
+                onChange={update("location")}
+              />
+            </div>
+
+            <div className="field">
+              <label>Condition</label>
+              <select value={form.condition} onChange={update("condition")}>
+                <option value="">Select condition...</option>
+                <option>New</option>
+                <option>Like new</option>
+                <option>Good</option>
+                <option>Fair</option>
+              </select>
+            </div>
+
+            <div className="field field-full">
+              <label>Description</label>
+              <textarea
+                rows="4"
+                placeholder="Add details like condition, included accessories, when/where to meet, etc."
+                value={form.description}
+                onChange={update("description")}
+              />
+            </div>
+
+            <div className="field-full">
+              {error && (
+                <p style={{ color: "crimson", marginBottom: 10 }}>{error}</p>
+              )}
+              <button
+                type="submit"
+                className="mp-btn mp-btn-primary"
+                style={{
+                  width: "100%",
+                  justifyContent: "center",
+                  padding: "14px 20px",
+                }}
+                disabled={saving}
+              >
+                {saving ? "Posting..." : "Post Listing"}
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {/* popup when they reach the daily posting limit */}
+        {limitInfo &&
+          createPortal(
+            <div
+              className="mp-root cm-modal-overlay"
               onClick={() => setLimitInfo(null)}
             >
-              Got it
-            </button>
-          </div>
-        </div>
-      )}
+              <div
+                className="cm-modal cm-modal-small"
+                role="alertdialog"
+                aria-modal="true"
+                aria-label="Posting limit reached"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3>You reached your limit</h3>
+                <p className="cm-modal-sub">
+                  You can post up to 10 listings per day. Try again in 24 hours.
+                  {limitInfo.nextPostAt && (
+                    <>
+                      <br />
+                      You can post again on{" "}
+                      {formatNextPost(limitInfo.nextPostAt)}.
+                    </>
+                  )}
+                </p>
+                <div className="cm-modal-actions">
+                  <button
+                    type="button"
+                    className="cm-modal-btn cm-modal-btn-primary"
+                    onClick={() => setLimitInfo(null)}
+                  >
+                    Got it
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )}
 
-      {showSignIn && (
-        <SignInModal
-          message="You must be logged in to post a listing"
-          onClose={() => navigate("/browse")}
-        />
-      )}
+        {showSignIn && (
+          <SignInModal
+            message="You must be logged in to post a listing"
+            onClose={() => navigate("/browse")}
+          />
+        )}
+      </div>
     </div>
   );
 }
