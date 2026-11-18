@@ -24,6 +24,7 @@ const wantedRoutes = require("./routes/wanted");
 const notificationRoutes = require("./routes/notifications"); // NEW
 const registerChatSockets = require("./sockets/chat");
 const { startCleanupJob } = require("./cleanupMessage/cleanupMessage");
+const adminRoutes = require("./routes/admin");
 
 const app = express();
 app.use(cors());
@@ -55,6 +56,7 @@ app.use("/saves", savesRoutes);
 app.use("/follows", followRoutes);
 app.use("/wanted", wantedRoutes);
 app.use("/notifications", notificationRoutes); // NEW
+app.use("/admin", adminRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
