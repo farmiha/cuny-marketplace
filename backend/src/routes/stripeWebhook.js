@@ -1,4 +1,5 @@
 const stripe = require("../lib/stripe");
+const prisma = require("../prismaClient");
 const { fulfillOrder } = require("../lib/orders");
 
 // Stripe calls this URL by itself when a payment succeeds, even if the buyer
@@ -17,8 +18,18 @@ module.exports = async function stripeWebhook(req, res) {
   }
 
   if (event.type === "payment_intent.succeeded") {
-    const orderId = Number(event.data.object.metadata?.orderId);
-    if (orderId) await fulfillOrder(orderId);
+    const pi = event.data.object;
+    const orderId = Number(pi.metadata?.orderId);
+    if (orderId) {
+      // only mark it paid if Stripe really collected the amount WE saved on the order
+      // (for offers that is the accepted price, set by the server)
+      const order = await prisma.order.findUnique({ where: { id: orderId } });
+      if (order && pi.amount === order.totalCents && pi.currency === "usd") {
+        await fulfillOrder(orderId);
+      } else {
+        console.error(`Webhook: amount mismatch for order ${orderId}, not fulfilling.`);
+      }
+    }
   }
 
   res.json({ received: true });

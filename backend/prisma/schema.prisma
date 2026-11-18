@@ -49,6 +49,8 @@ model User {
   WantedResponse     WantedResponse[]
   followBlocksMade   FollowBlock[]    @relation("FollowBlocker")
   followBlocksRecv   FollowBlock[]    @relation("FollowBlocked")
+  offersAsBuyer      Offer[]          @relation("OfferBuyer")
+  offersAsSeller     Offer[]          @relation("OfferSeller")
 }
 
 // one row every time someone posts a listing, used for the daily posting limit.
@@ -94,6 +96,7 @@ model Listing {
   orderItems      OrderItem[]
   saves           SavedListing[]
   wantedResponses WantedResponse[]
+  offers          Offer[]
 }
 
 model Message {
@@ -107,6 +110,9 @@ model Message {
   listing    Listing  @relation(fields: [listingId], references: [id])
   listingId  Int
   createdAt  DateTime @default(now())
+  kind       String   @default("text") // text | offer | system
+  offer      Offer?   @relation(fields: [offerId], references: [id])
+  offerId    Int?
 }
 
 model Report {
@@ -207,7 +213,10 @@ model Order {
   stripePaymentIntentId String?     @unique
   createdAt             DateTime    @default(now())
   paidAt                DateTime?
+  offerId               Int? // set when the buyer paid an accepted offer price
   items                 OrderItem[]
+
+  @@index([offerId])
 }
 
 model OrderItem {
@@ -269,4 +278,29 @@ model FollowBlock {
   createdAt DateTime @default(now())
 
   @@unique([blockerId, blockedId])
+}
+// ---------- offers / price negotiation ----------
+
+// One row per price somebody proposes. A counter-offer is a NEW row and the old one becomes "countered".
+// amountCents is the ONLY price Stripe ever charges for an offer, and only the server writes it.
+model Offer {
+  id           Int       @id @default(autoincrement())
+  listing      Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId    Int
+  buyer        User      @relation("OfferBuyer", fields: [buyerId], references: [id])
+  buyerId      String
+  seller       User      @relation("OfferSeller", fields: [sellerId], references: [id])
+  sellerId     String
+  proposerId   String // who made THIS offer (buyer, or seller when countering)
+  amountCents  Int
+  askingCents  Int // listing price when the offer was made, for the checkout strikethrough
+  status       String    @default("pending") // pending | accepted | declined | countered | expired | used
+  expiresAt    DateTime // "reply by" while pending
+  holdUntil    DateTime? // "price is held until" once accepted
+  createdAt    DateTime  @default(now())
+  respondedAt  DateTime?
+  messages     Message[]
+
+  @@index([listingId, status])
+  @@index([buyerId, status])
 }

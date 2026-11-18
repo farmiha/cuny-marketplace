@@ -12,7 +12,7 @@ async function fulfillOrder(orderId) {
   const listingIds = order.items.map((i) => i.listingId);
   const now = new Date();
 
-  await prisma.$transaction([
+  const ops = [
     prisma.order.update({
       where: { id: orderId },
       data: { status: "paid", paidAt: now },
@@ -24,7 +24,24 @@ async function fulfillOrder(orderId) {
     }),
     // clear them out of everybody's cart
     prisma.cartItem.deleteMany({ where: { listingId: { in: listingIds } } }),
-  ]);
+  ];
+
+  // paid with an accepted offer: that offer is used up, and every other
+  // open offer on these items is closed because the item is gone
+  if (order.offerId) {
+    ops.push(
+      prisma.offer.update({ where: { id: order.offerId }, data: { status: "used" } }),
+      prisma.offer.updateMany({
+        where: {
+          listingId: { in: listingIds },
+          id: { not: order.offerId },
+          status: { in: ["pending", "accepted"] },
+        },
+        data: { status: "expired" },
+      }),
+    );
+  }
+  await prisma.$transaction(ops);
 
   return prisma.order.findUnique({ where: { id: orderId } });
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -11,6 +11,7 @@ import { useCart } from "../hooks/useCart";
 import { createPaymentIntent } from "../lib/cartApi";
 import { money } from "../lib/money";
 import CheckoutSteps from "../components/CheckoutSteps";
+import { getOffer, startOfferCheckout } from "../lib/offersApi";
 
 // The PUBLISHABLE key (pk_test_...) is safe to use in the browser.
 const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
@@ -73,6 +74,11 @@ function PaymentForm({ orderId, totalCents }) {
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  // /checkout?offer=12 means "pay the price the seller accepted". The page only
+  // passes the offer id. The server looks up the price itself.
+  const offerId = Number(params.get("offer")) || null;
+  const [offer, setOffer] = useState(null);
   const { cart, loading, loggedIn } = useCart();
   const [intent, setIntent] = useState(null); // { clientSecret, orderId, totals }
   const [error, setError] = useState("");
@@ -82,6 +88,15 @@ export default function Checkout() {
     if (loading) return;
     if (!loggedIn) {
       navigate("/login");
+      return;
+    }
+    if (offerId) {
+      if (started.current) return;
+      started.current = true;
+      getOffer(offerId).then(setOffer).catch((err) => setError(err.message));
+      startOfferCheckout(offerId)
+        .then(setIntent)
+        .catch((err) => setError(err.message));
       return;
     }
     if (cart.count === 0) {
@@ -94,12 +109,33 @@ export default function Checkout() {
     createPaymentIntent(cart.totals.promoCode)
       .then(setIntent)
       .catch((err) => setError(err.message));
-  }, [loading, loggedIn, cart.count]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loading, loggedIn, cart.count, offerId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const totals = intent?.totals || cart.totals;
-  const groups = cart.groups
-    .map((g) => ({ ...g, items: g.items.filter((i) => !i.unavailable) }))
-    .filter((g) => g.items.length > 0);
+  const totals =
+    intent?.totals ||
+    (offer
+      ? { subtotalCents: offer.amountCents, discountCents: 0, totalCents: offer.amountCents, promoCode: null }
+      : cart.totals);
+  const groups = offerId
+    ? offer
+      ? [
+          {
+            seller: { id: offer.sellerId, name: offer.seller?.name },
+            items: [
+              {
+                listingId: offer.listingId,
+                title: offer.listing.title,
+                location: offer.listing.location,
+                priceCents: offer.amountCents,
+              },
+            ],
+          },
+        ]
+      : []
+    : cart.groups
+        .map((g) => ({ ...g, items: g.items.filter((i) => !i.unavailable) }))
+        .filter((g) => g.items.length > 0);
+  const backLabel = offerId ? "Back to messages" : "Back to cart";
 
   return (
     <div className="cart-page">
@@ -144,9 +180,15 @@ export default function Checkout() {
             {error && (
               <>
                 <p className="cart-error-inline">{error}</p>
-                <Link to="/cart" className="cart-btn-outline">
-                  Back to cart
-                </Link>
+                {offerId ? (
+                  <button type="button" className="cart-btn-outline" onClick={() => navigate(-1)}>
+                    {backLabel}
+                  </button>
+                ) : (
+                  <Link to="/cart" className="cart-btn-outline">
+                    {backLabel}
+                  </Link>
+                )}
               </>
             )}
             {stripePromise && !error && !intent && (
@@ -177,16 +219,34 @@ export default function Checkout() {
                 g.items.map((item) => (
                   <li key={item.listingId}>
                     <span>{item.title}</span>
-                    <span>{money(item.priceCents)}</span>
+                    <span>
+                      {offer && (
+                        <s className="offer-was">{money(offer.askingCents)}</s>
+                      )}{" "}
+                      {money(item.priceCents)}
+                    </span>
                   </li>
                 )),
               )}
             </ul>
             <dl>
-              <div>
-                <dt>Subtotal</dt>
-                <dd>{money(totals.subtotalCents)}</dd>
-              </div>
+              {offer ? (
+                <>
+                  <div>
+                    <dt>Asking price</dt>
+                    <dd><s className="offer-was">{money(offer.askingCents)}</s></dd>
+                  </div>
+                  <div className="promo-row">
+                    <dt>Your accepted offer</dt>
+                    <dd>{money(offer.amountCents)}</dd>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <dt>Subtotal</dt>
+                  <dd>{money(totals.subtotalCents)}</dd>
+                </div>
+              )}
               {totals.promoCode && (
                 <div className="promo-row">
                   <dt>Promo · {totals.promoCode}</dt>
@@ -202,9 +262,15 @@ export default function Checkout() {
               <span>Total</span>
               <span>{money(totals.totalCents)}</span>
             </div>
-            <Link to="/cart" className="cart-keep-browsing">
-              Back to cart
-            </Link>
+            {offerId ? (
+              <button type="button" className="cart-keep-browsing" onClick={() => navigate(-1)}>
+                {backLabel}
+              </button>
+            ) : (
+              <Link to="/cart" className="cart-keep-browsing">
+                {backLabel}
+              </Link>
+            )}
           </div>
         </aside>
       </div>
