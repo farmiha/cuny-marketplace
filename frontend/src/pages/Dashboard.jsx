@@ -13,6 +13,7 @@ import { useShopAll } from "../hooks/useShopAll";
 import LiveMessagesTab from "../components/LiveMessages";
 import MyOrders from "../components/MyOrders";
 import MyListings from "../components/MyListings";
+import AdminSection from "../components/AdminSection";
 
 const THREADS = {
   maya: {
@@ -548,7 +549,31 @@ function ProfileTab() {
       </div>
       <div className="profile-shell">
         <div className="profile-card">
-          <div className="profile-avatar">{displayName[0]}</div>
+          <div style={{ position: "relative", width: "fit-content", margin: "0 auto" }}>
+            <div className="profile-avatar">{displayName[0]}</div>
+            {profile.isAdmin && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: -8,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  padding: "2px 12px",
+                  borderRadius: 999,
+                  background: "#fff",
+                  color: "#1f3a6e",
+                  border: "2px solid #1f3a6e",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: ".08em",
+                  textTransform: "uppercase",
+                  lineHeight: 1.4,
+                }}
+              >
+                Admin
+              </span>
+            )}
+          </div>
           <p className="profile-name">{displayName}</p>
           <p className="profile-email">{profile.email}</p>
           <p className="profile-sub">{details}</p>
@@ -636,6 +661,7 @@ function ProfileTab() {
           />
 
           <SafetySection />
+          <AdminSection />
         </div>
       </div>
     </>

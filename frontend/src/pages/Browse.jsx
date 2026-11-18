@@ -11,14 +11,13 @@ import { useCampusTheme } from "../hooks/useCampusTheme";
 import { useShopAll } from "../hooks/useShopAll";
 import { useRecommendations } from "../hooks/useRecommendations";
 import { recommendOrder, syncInterest } from "../lib/recommendationEngine";
-
-// Later: replace with a moderator check so only the 5 creators see the panel.
-const SHOW_ALGORITHM_PANEL = true;
+import { useAdminMode } from "../hooks/useAdminMode";
 
 // how many cards show at first, and how many more load each time you scroll
 const PAGE_SIZE = 8;
 
 export default function Browse() {
+  const { adminView } = useAdminMode();
   const [listings, setListings] = useState([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All categories");
@@ -224,7 +223,7 @@ export default function Browse() {
           </Link>
         </div>
 
-        {SHOW_ALGORITHM_PANEL && (
+        {adminView && (
           <div style={{ marginBottom: 20 }}>
             <RecommendationPanel
               activity={reco.activity}

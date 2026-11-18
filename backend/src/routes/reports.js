@@ -185,6 +185,18 @@ router.post("/", async (req, res) => {
     },
   });
 
+  const REPORT_LIMIT = 5;
+const openCount = await prisma.report.count({
+  where: { listingId: listing.id, status: { in: OPEN_STATUSES } },
+});
+// admins can pull a listing for review with a single report (for demos)
+if ((me.isAdmin || openCount >= REPORT_LIMIT) && listing.status === "active") {
+  await prisma.listing.update({
+    where: { id: listing.id },
+    data: { status: "under_review" },
+  });
+}
+
   res.status(201).json({ message: "Report sent" });
 });
 
