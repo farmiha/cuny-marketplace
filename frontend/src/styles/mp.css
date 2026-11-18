@@ -4655,3 +4655,234 @@ html[data-mode="dark"] .mp-root .mp-limg-empty::before {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ================= responsive navbar + mobile menu ================= */
+/* mobile menu: a clean sheet under the bar, same colors as the bar */
+:root .mp-topbar .mobile-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 16px 18px;
+  max-height: calc(100vh - 70px);
+  overflow-y: auto;
+  background: var(--primary);
+  border-top: 1px solid var(--mp-line);
+  box-shadow: 0 24px 40px -18px rgba(0, 0, 0, 0.45);
+  animation: mp-rise 0.22s var(--mp-ease) backwards;
+}
+:root[data-mode="dark"] .mp-topbar .mobile-menu {
+  background: color-mix(in srgb, var(--primary) 70%, #000);
+}
+:root .mp-topbar .mobile-menu .mp-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 16px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--primary-ink);
+}
+:root .mp-topbar .mobile-menu .mp-link::after {
+  display: none;
+}
+:root .mp-topbar .mobile-menu .mp-link.mp-on {
+  background: color-mix(in srgb, var(--primary-ink) 20%, transparent);
+}
+:root .mp-topbar .mobile-menu .menu-badge {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e5484d;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+:root .mp-topbar .mobile-menu .menu-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--mp-line);
+}
+:root .mp-topbar .mobile-menu .menu-action {
+  height: 46px;
+  border-radius: 999px;
+  border: 1px solid var(--mp-line);
+  background: var(--mp-card);
+  color: var(--primary-ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+:root .mp-topbar .mobile-menu .menu-close {
+  display: none;
+}
+
+/* tablets / phones */
+@media (max-width: 1199px) {
+  .mp-root.mp-topbar .mp-nav {
+    height: 68px;
+    gap: 10px;
+  }
+  .mp-root .mp-nav .mp-right {
+    margin-left: auto;
+  }
+}
+@media (max-width: 760px) {
+  .mp-root .topbar-right > .mp-btn {
+    display: none;
+  } /* Sign Out / Log In live in the menu */
+  .mp-root .topbar-right .mp-icon-btn[aria-label="Toggle dark mode"] {
+    display: none;
+  }
+  .mp-root .mp-nav .mp-logo-old {
+    font-size: 0.95rem !important;
+  }
+}
+@media (max-width: 520px) {
+  .mp-root .mp-pill-label {
+    display: none;
+  } /* campus button becomes just the pin */
+  .mp-root .mp-nav .mp-pill-select {
+    padding: 0 10px;
+  }
+  .mp-root.mp-topbar .mp-nav {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .mp-root .mp-nav .mp-right {
+    gap: 6px;
+  }
+  .mp-root .mp-nav .mp-icon-btn,
+  .mp-root .mp-nav .icon-btn {
+    width: 38px;
+    height: 38px;
+  }
+}
+@media (max-width: 380px) {
+  .mp-root .mp-nav .mp-logo-old {
+    font-size: 0.8rem !important;
+  }
+}
+/* campus dropdown must never run off the screen on phones */
+@media (max-width: 520px) {
+  .mp-root .mp-cmenu {
+    position: fixed;
+    top: 76px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: 70vh;
+  }
+}
+@media (max-width: 520px) {
+  .mp-root .mp-notif-menu {
+    position: fixed;
+    top: 76px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .mp-root .mp-nav .mp-logo-old {
+    font-size: 0.8rem !important;
+  }
+  .mp-root.mp-topbar .mp-nav {
+    padding: 0 10px;
+    gap: 6px;
+  }
+  .mp-root .mp-nav .mp-icon-btn,
+  .mp-root .mp-nav .icon-btn,
+  .mp-root .mp-nav .mp-pill-select {
+    height: 36px;
+  }
+  .mp-root .mp-nav .mp-icon-btn,
+  .mp-root .mp-nav .icon-btn {
+    width: 36px;
+  }
+  .mp-root .mp-nav .mp-pill-select {
+    padding: 0 8px;
+    gap: 3px;
+  }
+  .mp-root .mp-nav .mp-right {
+    gap: 5px;
+  }
+}
+
+/* make my mobile menu win over the old full-screen menu rules (navbar-mobile.css) */
+:root .mp-topbar .mobile-menu {
+  inset: auto;
+  top: 100%;
+  left: 0;
+  right: 0;
+  bottom: auto;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 4px;
+  z-index: 90;
+}
+:root .mp-topbar .mobile-menu .mp-link {
+  position: relative;
+  font-family: inherit;
+  border: 0;
+  opacity: 1;
+  line-height: 1.3;
+}
+:root .mp-topbar .mobile-menu .mp-link.active,
+:root .mp-topbar .mobile-menu .mp-link.mp-on {
+  color: var(--primary-ink);
+  border: 0;
+}
+:root .mp-topbar .mobile-menu .menu-badge {
+  position: static;
+  font-family: inherit;
+  line-height: 1;
+}
+
+/* Messages on phones: list on top, chat below, nothing cut off */
+@media (max-width: 700px) {
+  #page-messages .msg-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 720px;
+  }
+  #page-messages .msg-list {
+    max-height: 210px;
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--cc) 25%, var(--mp-line));
+  }
+  #page-messages .msg-thread {
+    min-width: 0;
+    height: auto;
+  }
+  #page-messages .msg-bubbles,
+  #page-messages .msg-bubble,
+  #page-messages .msg-input {
+    min-width: 0;
+    max-width: 100%;
+  }
+  #page-messages .msg-input {
+    gap: 8px;
+    padding: 10px;
+  }
+  #page-messages .msg-input input {
+    min-width: 0;
+    flex: 1;
+  }
+  #page-messages .msg-input button {
+    flex: none;
+    padding: 0 16px;
+  }
+}
