@@ -10,6 +10,14 @@ import {
   getListingInfo,
   sendOffer,
 } from "../lib/offersApi";
+import {
+  cancelMeetup,
+  confirmMeetup,
+  declineMeetup,
+  getSpots,
+  proposeMeetup,
+  rescheduleMeetup,
+} from "../lib/meetupsApi";
 
 
 const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
@@ -48,8 +56,42 @@ function effStatus(o) {
   return o.status;
 }
 
-// changes whenever a message or an offer's status changes (used by the 5 second refresh)
-const signature = (list) => list.map((m) => `${m.id}:${m.offer?.status || ""}`).join("|");
+// changes whenever a message, offer or meetup status changes (used by the 5 second refresh)
+const signature = (list) =>
+  list.map((m) => `${m.id}:${m.offer?.status || ""}:${m.meetup?.status || ""}`).join("|");
+
+const whenLong = (d) =>
+  new Date(d).toLocaleString([], {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+// a meetup can pass while the chat is open, so check the clock too
+function effMeetupStatus(m) {
+  const now = Date.now();
+  const start = new Date(m.startsAt).getTime();
+  if (m.status === "pending" && start < now) return "expired";
+  if (m.status === "confirmed" && start + 3 * 60 * 60 * 1000 < now) return "done";
+  return m.status;
+}
+
+const MEETUP_LABEL = {
+  declined: "Declined",
+  rescheduled: "New time suggested",
+  canceled: "Canceled",
+  expired: "Expired",
+  done: "Completed",
+};
+
+// the value a <input type="datetime-local"> needs for "15 minutes from now"
+function minLocal() {
+  const d = new Date(Date.now() + 15 * 60 * 1000);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
 
 const STATUS_LABEL = {
   accepted: "Accepted",
@@ -112,6 +154,57 @@ function OfferCard({ offer, myId, otherName, busy, onAccept, onDecline, onCounte
   );
 }
 
+function MeetupCard({ meetup, myId, otherName, busy, onConfirm, onDecline, onReschedule, onCancel }) {
+  const status = effMeetupStatus(meetup);
+  const mine = meetup.proposerId === myId;
+
+  return (
+    <div className={"neg-card " + (mine ? "me" : "them")}>
+      <span className="neg-label">
+        {mine ? "You proposed a meetup" : `${otherName} proposed a meetup`}
+      </span>
+      <span className="neg-when">{whenLong(meetup.startsAt)}</span>
+      <span className="neg-spot">{meetup.spot}</span>
+      {meetup.note && <span className="neg-note">"{meetup.note}"</span>}
+
+      {MEETUP_LABEL[status] && <span className={"neg-status " + status}>{MEETUP_LABEL[status]}</span>}
+
+      {status === "pending" &&
+        (mine ? (
+          <>
+            <span className="neg-note">Waiting for a reply...</span>
+            <button type="button" className="neg-btn" disabled={busy} onClick={onCancel}>
+              Take back
+            </button>
+          </>
+        ) : (
+          <div className="neg-actions">
+            <button type="button" className="neg-btn primary" disabled={busy} onClick={onConfirm}>
+              Confirm meetup
+            </button>
+            <button type="button" className="neg-btn" disabled={busy} onClick={onReschedule}>
+              Other time
+            </button>
+            <button type="button" className="neg-btn danger" disabled={busy} onClick={onDecline}>
+              Decline
+            </button>
+          </div>
+        ))}
+
+      {status === "confirmed" && (
+        <>
+          <span className="neg-status accepted">Confirmed</span>
+          <span className="neg-note">You'll get a reminder 1 hour before.</span>
+          <span className="neg-note">Stay in busy public areas, and bring a friend if you can.</span>
+          <button type="button" className="neg-btn danger" disabled={busy} onClick={onCancel}>
+            Cancel meetup
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function LiveMessagesTab({ fallback }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -127,6 +220,12 @@ export default function LiveMessagesTab({ fallback }) {
   const [offerMode, setOfferMode] = useState(null); // null | "new" | { counterFor: offerId }
   const [offerAmount, setOfferAmount] = useState("");
   const [busy, setBusy] = useState(false);
+  const [spots, setSpots] = useState([]); // safe meetup spots for this listing
+  const [meetupMode, setMeetupMode] = useState(null); // null | "new" | { rescheduleFor: meetupId }
+  const [meetupWhen, setMeetupWhen] = useState("");
+  const [meetupSpot, setMeetupSpot] = useState("");
+  const [meetupCustom, setMeetupCustom] = useState("");
+  const [meetupNote, setMeetupNote] = useState("");
   const socketRef = useRef(null);
   const activeRef = useRef(null);
   const bottomRef = useRef(null);
@@ -144,8 +243,10 @@ export default function LiveMessagesTab({ fallback }) {
     activeRef.current = c;
     setOfferMode(null);
     setOfferAmount("");
+    setMeetupMode(null);
     setError("");
     getListingInfo(c.listingId).then(setListingInfo).catch(() => setListingInfo(null));
+    getSpots(c.listingId).then((r) => setSpots(r.spots)).catch(() => setSpots([]));
     const history = await apiFetch(
       `/messages/conversations/${c.listingId}/${c.otherUserId}`,
       { headers: authHeader(t) }
@@ -317,6 +418,7 @@ export default function LiveMessagesTab({ fallback }) {
       await fn();
       setOfferMode(null);
       setOfferAmount("");
+      setMeetupMode(null);
       await refreshThread();
     } catch (err) {
       setError(err.message);
@@ -334,6 +436,32 @@ export default function LiveMessagesTab({ fallback }) {
         : counterOffer(offerMode.counterFor, offerAmount)
     );
   }
+
+  function openMeetupForm(mode) {
+    setError("");
+    setOfferMode(null);
+    setMeetupWhen("");
+    setMeetupSpot(spots[0] || "__other");
+    setMeetupCustom("");
+    setMeetupNote("");
+    setMeetupMode(mode);
+  }
+
+  function submitMeetup(e) {
+    e.preventDefault();
+    if (!meetupWhen) return;
+    const startsAt = new Date(meetupWhen).toISOString();
+    const spot = meetupSpot === "__other" ? meetupCustom.trim() : meetupSpot;
+    runOfferAction(() =>
+      meetupMode === "new"
+        ? proposeMeetup(active.listingId, active.otherUserId, startsAt, spot, meetupNote)
+        : rescheduleMeetup(meetupMode.rescheduleFor, startsAt, spot, meetupNote)
+    );
+  }
+
+  const meetups = messages.map((m) => m.meetup).filter(Boolean);
+  const openMeetup = meetups.find((x) => ["pending", "confirmed"].includes(effMeetupStatus(x)));
+  const canMeet = !!active && !openMeetup;
 
   const offers = messages.map((m) => m.offer).filter(Boolean);
   const openOffer = offers.find((o) => ["pending", "accepted"].includes(effStatus(o)));
@@ -402,6 +530,18 @@ export default function LiveMessagesTab({ fallback }) {
                       }}
                       onBuy={() => navigate(`/checkout?offer=${m.offer.id}`)}
                     />
+                  ) : m.kind === "meetup" && m.meetup ? (
+                    <MeetupCard
+                      key={m.id}
+                      meetup={m.meetup}
+                      myId={myId}
+                      otherName={active.otherUserName}
+                      busy={busy}
+                      onConfirm={() => runOfferAction(() => confirmMeetup(m.meetup.id))}
+                      onDecline={() => runOfferAction(() => declineMeetup(m.meetup.id))}
+                      onReschedule={() => openMeetupForm({ rescheduleFor: m.meetup.id })}
+                      onCancel={() => runOfferAction(() => cancelMeetup(m.meetup.id))}
+                    />
                   ) : (
                     <div key={m.id} className={"bubble " + (m.senderId === myId ? "me" : "them")}>
                       {m.content}
@@ -434,6 +574,68 @@ export default function LiveMessagesTab({ fallback }) {
                   </button>
                 </form>
               )}
+              {meetupMode && (
+                <form className="neg-bar meet-bar" onSubmit={submitMeetup}>
+                  <span className="neg-ask">
+                    {meetupMode === "new" ? "Propose a meetup" : "Suggest another time"}
+                  </span>
+                  <label className="neg-field">
+                    <span>When</span>
+                    <input
+                      type="datetime-local"
+                      className="meet-when"
+                      min={minLocal()}
+                      required
+                      value={meetupWhen}
+                      onChange={(e) => setMeetupWhen(e.target.value)}
+                    />
+                  </label>
+                  <label className="neg-field">
+                    <span>Where</span>
+                    <select
+                      className="meet-spot"
+                      value={meetupSpot}
+                      onChange={(e) => setMeetupSpot(e.target.value)}
+                    >
+                      {spots.map((sp) => (
+                        <option key={sp} value={sp}>{sp}</option>
+                      ))}
+                      <option value="__other">Other (type your own)</option>
+                    </select>
+                  </label>
+                  {meetupSpot === "__other" && (
+                    <input
+                      type="text"
+                      className="meet-text"
+                      maxLength={80}
+                      placeholder="A public campus spot"
+                      value={meetupCustom}
+                      onChange={(e) => setMeetupCustom(e.target.value)}
+                    />
+                  )}
+                  <input
+                    type="text"
+                    className="meet-text"
+                    maxLength={140}
+                    placeholder="Note (optional)"
+                    value={meetupNote}
+                    onChange={(e) => setMeetupNote(e.target.value)}
+                  />
+                  <p className="neg-safe">
+                    Pick a busy public spot. Libraries and security desks are the safest.
+                  </p>
+                  <button
+                    type="submit"
+                    className="neg-btn primary"
+                    disabled={busy || !meetupWhen || (meetupSpot === "__other" && !meetupCustom.trim())}
+                  >
+                    {meetupMode === "new" ? "Send meetup" : "Send new time"}
+                  </button>
+                  <button type="button" className="neg-cancel" onClick={() => setMeetupMode(null)}>
+                    Cancel
+                  </button>
+                </form>
+              )}
               <form className="msg-input" onSubmit={send}>
                 <input
                   type="text"
@@ -445,14 +647,27 @@ export default function LiveMessagesTab({ fallback }) {
                   <button
                     type="button"
                     className="neg-make"
-                    disabled={!!offerMode}
+                    disabled={!!offerMode || !!meetupMode}
                     onClick={() => {
                       setError("");
                       setOfferAmount("");
+                      setMeetupMode(null);
                       setOfferMode("new");
                     }}
                   >
-                    Make an offer
+                    <span className="neg-long">Make an offer</span>
+                    <span className="neg-short">Offer</span>
+                  </button>
+                )}
+                {canMeet && (
+                  <button
+                    type="button"
+                    className="neg-make"
+                    disabled={!!offerMode || !!meetupMode}
+                    onClick={() => openMeetupForm("new")}
+                  >
+                    <span className="neg-long">Propose meetup</span>
+                    <span className="neg-short">Meetup</span>
                   </button>
                 )}
                 <button type="submit" className="cta-primary-solid">Send</button>

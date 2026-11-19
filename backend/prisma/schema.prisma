@@ -97,6 +97,7 @@ model Listing {
   saves           SavedListing[]
   wantedResponses WantedResponse[]
   offers          Offer[]
+  meetups         Meetup[]
 }
 
 model Message {
@@ -113,6 +114,8 @@ model Message {
   kind       String   @default("text") // text | offer | system
   offer      Offer?   @relation(fields: [offerId], references: [id])
   offerId    Int?
+  meetup     Meetup?  @relation(fields: [meetupId], references: [id])
+  meetupId   Int?
 }
 
 model Report {
@@ -303,4 +306,27 @@ model Offer {
 
   @@index([listingId, status])
   @@index([buyerId, status])
+}
+
+// ---------- meetups (time + safe spot, confirmed by both people) ----------
+
+// One row per proposed time. "Suggest another time" makes a NEW row and the old one becomes "rescheduled".
+model Meetup {
+  id          Int       @id @default(autoincrement())
+  listing     Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId   Int
+  buyerId     String
+  sellerId    String
+  proposerId  String // who suggested THIS time
+  startsAt    DateTime
+  spot        String // e.g. "Library (main entrance)"
+  note        String?
+  status      String    @default("pending") // pending | confirmed | declined | rescheduled | canceled | expired | done
+  createdAt   DateTime  @default(now())
+  respondedAt DateTime?
+  confirmedAt DateTime?
+  messages    Message[]
+
+  @@index([listingId, status])
+  @@index([status, startsAt])
 }

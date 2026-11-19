@@ -193,6 +193,32 @@ router.get("/", requireAuth, async (req, res) => {
     });
   }
 
+   // meetup reminders: 1 hour before a confirmed meetup (or right away if it was confirmed later than that)
+  const upcoming = await prisma.meetup.findMany({
+    where: {
+      status: "confirmed",
+      startsAt: { gt: new Date() },
+      OR: [{ buyerId: req.userId }, { sellerId: req.userId }],
+    },
+    include: { listing: { select: { title: true } } },
+  });
+  for (const m of upcoming) {
+    const reminderAt = new Date(
+      Math.max(m.startsAt.getTime() - 60 * 60 * 1000, (m.confirmedAt || m.createdAt).getTime()),
+    );
+    if (reminderAt > since && reminderAt <= new Date()) {
+      const otherId = m.buyerId === req.userId ? m.sellerId : m.buyerId;
+      const mins = Math.max(1, Math.round((m.startsAt - Date.now()) / 60000));
+      items.push({
+        id: `meetup-${m.id}`,
+        type: "meetup",
+        text: `Meetup in ${mins} min: "${m.listing.title}" at ${m.spot}`,
+        link: `/dashboard?tab=messages&listingId=${m.listingId}&receiverId=${otherId}`,
+        at: reminderAt,
+      });
+    }
+  }
+
   items.sort((a, b) => new Date(b.at) - new Date(a.at));
 
   if (all) {

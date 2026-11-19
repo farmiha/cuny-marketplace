@@ -3,6 +3,7 @@ const router = express.Router();
 const prisma = require("../prismaClient");
 const requireAuth = require("../middleware/requireAuth");
 const { expireStaleOffers } = require("../lib/offers");
+const { expireStaleMeetups } = require("../lib/meetups");
 
 // GET /messages/unread-count - how many unread messages the logged in user has
 router.get("/unread-count", requireAuth, async (req, res) => {
@@ -47,6 +48,7 @@ router.get("/conversations", requireAuth, async (req, res) => {
 // NEW: GET /messages/conversations/:listingId/:otherUserId - one chat's history
 router.get("/conversations/:listingId/:otherUserId", requireAuth, async (req, res) => {
   await expireStaleOffers(); // so offer cards show "Expired" on time
+  await expireStaleMeetups();
   const listingId = Number(req.params.listingId);
   const other = req.params.otherUserId;
   const messages = await prisma.message.findMany({
@@ -58,7 +60,7 @@ router.get("/conversations/:listingId/:otherUserId", requireAuth, async (req, re
       ],
     },
     orderBy: { createdAt: "asc" },
-    include: { offer: true }, // offer cards need the price + status
+    include: { offer: true, meetup: true }, // offer + meetup cards need their details
   });
   res.json(messages);
 });

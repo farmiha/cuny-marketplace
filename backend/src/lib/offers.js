@@ -31,11 +31,20 @@ async function expireStaleOffers() {
 // the little message that shows up in the chat (offer card or system line).
 // It is pushed through the same "user:<id>" socket rooms as normal chat
 // messages, so both people see it right away.
-async function postMessage(io, { senderId, receiverId, listingId, kind, content, offerId }) {
+async function postMessage(io, { senderId, receiverId, listingId, kind, content, offerId, meetupId }) {
   const created = await prisma.message.create({
-    data: { senderId, receiverId, listingId, kind, content, offerId: offerId || null },
+    data: {
+      senderId,
+      receiverId,
+      listingId,
+      kind,
+      content,
+      offerId: offerId || null,
+      meetupId: meetupId || null,
+    },
     include: {
       offer: true,
+      meetup: true,
       sender: { select: { name: true, email: true } },
       listing: { select: { title: true } },
     },

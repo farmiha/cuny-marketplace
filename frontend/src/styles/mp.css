@@ -4927,3 +4927,22 @@ html[data-mode="dark"] .mp-root .mp-limg-empty::before {
 #page-messages .neg-ask { width: 100%; }
 #page-messages .msg-input .neg-make { padding: 0 12px; font-size: 13px; }
 }
+
+/* ===== Meetups (append to the END of mp.css, below the offers block) ===== */
+#page-messages .neg-when { font-size: 20px; font-weight: 800; line-height: 1.2; letter-spacing: -.01em; }
+#page-messages .neg-spot { font-size: 14px; font-weight: 700; color: var(--mp-accent); }
+#page-messages .neg-status.canceled, #page-messages .neg-status.expired { color: var(--mp-mute); }
+#page-messages .neg-status.done { color: var(--mp-ok); }
+
+#page-messages .meet-bar .neg-field { flex: 1 1 200px; }
+#page-messages .meet-bar .neg-field input,
+#page-messages .meet-bar .neg-field select { flex: 1; min-width: 0; width: auto; height: 38px; border-radius: 10px; border: 1.5px solid color-mix(in srgb, var(--cc, var(--mp-accent)) 40%, var(--mp-line)); background: var(--mp-card); color: var(--mp-ink); padding: 0 10px; font: inherit; }
+#page-messages .meet-bar .meet-text { flex: 1 1 100%; height: 38px; border-radius: 10px; border: 1.5px solid color-mix(in srgb, var(--cc, var(--mp-accent)) 40%, var(--mp-line)); background: var(--mp-card); color: var(--mp-ink); padding: 0 12px; font: inherit; }
+#page-messages .neg-safe { flex: 1 1 100%; margin: 0; font-size: 12.5px; color: var(--mp-mute); }
+
+/* two small buttons next to Send: full words on desktop, short words on phones */
+#page-messages .neg-short { display: none; }
+@media (max-width: 640px) {
+  #page-messages .neg-long { display: none; }
+  #page-messages .neg-short { display: inline; }
+}
