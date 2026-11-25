@@ -6,10 +6,45 @@ const requireAuth = require("../middleware/requireAuth");
 // the first time (or after a long break) we only look back this far
 const MAX_LOOKBACK_MS = 7 * 24 * 60 * 60 * 1000;
 
+// Notifications only cover the CURRENT MONTH. On the 1st of each month the list starts fresh,
+// and last month's notifications stop showing (nothing is deleted, they are just not loaded).
+// The month is counted in New York time because that's where our students are.
+const TZ = "America/New_York";
+
+function startOfCurrentMonth() {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "numeric",
+  }).formatToParts(now);
+  const year = Number(parts.find((p) => p.type === "year").value);
+  const month = Number(parts.find((p) => p.type === "month").value);
+  // 05:00 UTC on the 1st is midnight (winter) or 1am (summer) in New York,
+  // so subtract the extra hour when it is summer time
+  const guess = new Date(Date.UTC(year, month - 1, 1, 5));
+  const hour =
+    Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: TZ,
+        hour: "numeric",
+        hour12: false,
+      }).format(guess),
+    ) % 24;
+  return new Date(guess.getTime() - hour * 60 * 60 * 1000);
+}
+
+const monthLabel = () =>
+  new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ,
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 // GET /notifications - everything new for the logged in user since they last opened the bell
-// GET /notifications?all=1 - the full history for the notifications page (newest first, with dates)
+// GET /notifications?all=1 - everything from the current month for the notifications page (newest first, with dates)
 router.get("/", requireAuth, async (req, res) => {
   const me = await prisma.user.findUnique({
     where: { id: req.userId },
@@ -20,11 +55,13 @@ router.get("/", requireAuth, async (req, res) => {
   // the notifications page asks for everything, the bell only for what is new
   const all = req.query.all === "1";
   const weekAgo = new Date(Date.now() - MAX_LOOKBACK_MS);
-  const since = all
-    ? new Date(0)
-    : me.notificationsSeenAt && me.notificationsSeenAt > weekAgo
+  const monthStart = startOfCurrentMonth();
+  const recent =
+    me.notificationsSeenAt && me.notificationsSeenAt > weekAgo
       ? me.notificationsSeenAt
       : weekAgo;
+  // the page shows the whole month; the bell shows what is new, but never older than this month
+  const since = all ? monthStart : recent > monthStart ? recent : monthStart;
 
   const items = [];
 
@@ -193,7 +230,7 @@ router.get("/", requireAuth, async (req, res) => {
     });
   }
 
-   // meetup reminders: 1 hour before a confirmed meetup (or right away if it was confirmed later than that)
+  // meetup reminders: 1 hour before a confirmed meetup (or right away if it was confirmed later than that)
   const upcoming = await prisma.meetup.findMany({
     where: {
       status: "confirmed",
@@ -204,7 +241,10 @@ router.get("/", requireAuth, async (req, res) => {
   });
   for (const m of upcoming) {
     const reminderAt = new Date(
-      Math.max(m.startsAt.getTime() - 60 * 60 * 1000, (m.confirmedAt || m.createdAt).getTime()),
+      Math.max(
+        m.startsAt.getTime() - 60 * 60 * 1000,
+        (m.confirmedAt || m.createdAt).getTime(),
+      ),
     );
     if (reminderAt > since && reminderAt <= new Date()) {
       const otherId = m.buyerId === req.userId ? m.sellerId : m.buyerId;
@@ -229,7 +269,11 @@ router.get("/", requireAuth, async (req, res) => {
     const list = items
       .slice(0, 200)
       .map((n) => ({ ...n, isNew: new Date(n.at) > seen }));
-    return res.json({ count: list.filter((n) => n.isNew).length, items: list });
+    return res.json({
+      count: list.filter((n) => n.isNew).length,
+      items: list,
+      month: monthLabel(), // e.g. "November 2026", for the page heading
+    });
   }
 
   res.json({ count: items.length, items });

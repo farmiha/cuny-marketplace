@@ -1,8 +1,8 @@
-import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 
 // A small popup that tells a logged out visitor they need to sign in.
 // message: what to say, onClose: called when they close the popup
+// Uses the same popup style (cm-modal) as the blocked users / unblock popups.
 export default function SignInModal({ message, onClose }) {
   const navigate = useNavigate();
 
@@ -12,24 +12,19 @@ export default function SignInModal({ message, onClose }) {
     e.stopPropagation();
   };
 
-  // shown on top of everything (outside any card), same style as the other popups
-  return createPortal(
+  return (
     <div
-      className="mp-root cm-modal-overlay"
+      className="cm-modal-overlay"
       onClick={(e) => {
         stop(e);
         onClose();
       }}
     >
-      <div
-        className="cm-modal cm-modal-small"
-        role="alertdialog"
-        aria-modal="true"
-        aria-label="Sign in required"
-        onClick={stop}
-      >
-        <h3>Sign in to continue</h3>
-        <p className="cm-modal-sub">{message}</p>
+      <div className="cm-modal cm-modal-small" onClick={stop}>
+        <h3>{message}</h3>
+        <p className="cm-modal-sub">
+          Sign in with your CUNY email to continue.
+        </p>
         <div className="cm-modal-actions">
           <button
             type="button"
@@ -53,7 +48,6 @@ export default function SignInModal({ message, onClose }) {
           </button>
         </div>
       </div>
-    </div>,
-    document.body,
+    </div>
   );
 }

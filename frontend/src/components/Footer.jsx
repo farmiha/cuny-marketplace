@@ -1,92 +1,111 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCampusTheme } from "../hooks/useCampusTheme";
-import { supabase } from "../lib/supabaseClient";
-import SignInModal from "./SignInModal";
+
+// after a footer link is clicked, start the new page at the top
+const toTop = () => window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+const linkStyle = {
+  color: "var(--muted)",
+  textDecoration: "none",
+  fontSize: "0.85rem",
+};
+
+const headingStyle = {
+  margin: "0 0 10px",
+  fontSize: "0.78rem",
+  fontWeight: 700,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: "var(--ink)",
+};
 
 export default function Footer() {
   const { theme } = useCampusTheme();
 
-  // "Sell something" needs a login, so logged out visitors get a popup instead
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [showSignIn, setShowSignIn] = useState(false);
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setLoggedIn(!!data.session));
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => setLoggedIn(!!session),
-    );
-    return () => listener.subscription.unsubscribe();
-  }, []);
-
   return (
-    <footer style={{ border: 0, padding: 0, margin: 0, background: "transparent" }}>
-      <div className="mp-root">
-      <div className="mp-foot">
-      <div className="mp-wrap">
-        <div className="mp-foot-grid">
+    <footer>
+      <div className="wrap" style={{ width: "100%" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 28,
+            paddingBottom: 24,
+          }}
+        >
+          {/* who we are */}
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 800 }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--mp-accent)" }} />
+            <span className="foot-brand" style={{ marginBottom: 10 }}>
+              <span className="sw" />
               CUNY MarketPlace
-            </div>
-            <p style={{ color: "var(--mp-mute)", fontSize: 14, marginTop: 8 }}>
-              Built by CUNY students, for CUNY students. Buy and sell within your campus community.
+            </span>
+            <p style={{ margin: 0, fontSize: "0.85rem", lineHeight: 1.5 }}>
+              Built by CUNY students, for CUNY students. Buy and sell within
+              your campus community.
             </p>
           </div>
 
-          <div>
-            <h3 className="mp-fh">Explore</h3>
-            <div className="mp-fl">
-              <Link to="/browse">Browse listings</Link>
-              <Link to="/wanted">Wanted</Link>
-              <Link
-                to="/post"
-                onClick={(e) => {
-                  if (!loggedIn) {
-                    e.preventDefault();
-                    setShowSignIn(true);
-                  }
-                }}
-              >
-                Sell something
-              </Link>
-              <Link to="/following">Following</Link>
-              <Link to="/messages">Messages</Link>
-              <Link to="/profile">Profile</Link>
-            </div>
+          {/* where to go */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <p style={headingStyle}>Explore</p>
+            <Link to="/browse" style={linkStyle} onClick={toTop}>
+              Browse listings
+            </Link>
+            <Link to="/post" style={linkStyle} onClick={toTop}>
+              Sell something
+            </Link>
+            <Link
+              to="/dashboard?tab=messages"
+              style={linkStyle}
+              onClick={toTop}
+            >
+              Messages
+            </Link>
+            <Link to="/dashboard?tab=profile" style={linkStyle} onClick={toTop}>
+              Profile
+            </Link>
           </div>
 
-          <div>
-            <h3 className="mp-fh">Marketplace</h3>
-            <div className="mp-fl">
-              <Link to="/about">About us</Link>
-              <Link to="/guide">How it works</Link>
-              <Link to="/cart">Your cart</Link>
-            </div>
+          {/* about + help */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <p style={headingStyle}>MarketPlace</p>
+            <Link to="/about" style={linkStyle} onClick={toTop}>
+              About us
+            </Link>
+            <Link to="/guide" style={linkStyle} onClick={toTop}>
+              How it works
+            </Link>
+            <Link to="/cart" style={linkStyle} onClick={toTop}>
+              Your cart
+            </Link>
           </div>
 
+          {/* safety */}
           <div>
-            <h3 className="mp-fh">Stay safe</h3>
-            <p style={{ color: "var(--mp-mute)", fontSize: 14 }}>
-              Meet in public places on campus, and report anything that looks suspicious from the listing page.
+            <p style={headingStyle}>Stay safe</p>
+            <p style={{ margin: 0, fontSize: "0.85rem", lineHeight: 1.5 }}>
+              Meet in public places on campus, and report anything that looks
+              suspicious from the listing page.
             </p>
           </div>
         </div>
 
-        <div className="mp-foot-bottom">
+        {/* bottom bar */}
+        <div
+          style={{
+            borderTop: "1px solid var(--line)",
+            paddingTop: 16,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 10,
+          }}
+        >
           <span>© {new Date().getFullYear()} CUNY MarketPlace</span>
           <span>Currently browsing: {theme.full}</span>
         </div>
       </div>
-      </div>
-      </div>
-
-      {showSignIn && (
-        <SignInModal
-          message="You must be logged in to post a listing"
-          onClose={() => setShowSignIn(false)}
-        />
-      )}
     </footer>
   );
 }

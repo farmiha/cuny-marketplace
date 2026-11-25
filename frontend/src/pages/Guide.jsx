@@ -2,10 +2,22 @@ import { Link } from "react-router-dom";
 
 // quick start, in order
 const STEPS = [
-  { title: "Log in", text: "Use your CUNY email. Only CUNY students can join." },
-  { title: "Pick your campus", text: "Use the campus picker at the top. The whole site changes to your campus colors." },
-  { title: "Browse or post", text: "Find an item or sell your own. Listing is free." },
-  { title: "Message and meet", text: "Chat with the seller, then meet in a public spot on campus." },
+  {
+    title: "Log in",
+    text: "Use your CUNY email. Only CUNY students can join.",
+  },
+  {
+    title: "Pick your campus",
+    text: "Use the campus picker at the top. The whole site changes to your campus colors.",
+  },
+  {
+    title: "Browse or post",
+    text: "Find an item or sell your own. Listing is free.",
+  },
+  {
+    title: "Message and meet",
+    text: "Chat with the seller, then meet in a public spot on campus.",
+  },
 ];
 
 // one card per page. Keep this list up to date when a page changes.
@@ -58,7 +70,8 @@ const PAGES = [
     tips: [
       "Pick a chat on the left. Chats are grouped by listing.",
       "New messages show up right away and a number appears on Messages in the navbar.",
-      "Agree on a public spot on campus.",
+      "Press Make an offer to suggest a price. The other person can accept, counter or decline. If they accept, press Buy to pay that price.",
+      "Press Propose meetup to pick a time and a safe spot on campus. The other person confirms it, and you both get a reminder 1 hour before.",
     ],
   },
   {
@@ -67,8 +80,8 @@ const PAGES = [
     isNew: true,
     lead: "The bell in the navbar tells you what is new.",
     tips: [
-      "New followers, views, saves, sales, ratings and report decisions show up here.",
-      "Press View older notifications to see your whole history with dates.",
+      "New followers, views, saves, sales, ratings, report decisions and meetup reminders show up here.",
+      "Press View all this month to see every notification from this month. Each month starts fresh.",
     ],
   },
   {
@@ -113,22 +126,50 @@ const SAFETY = [
 ];
 
 const FAQ = [
-  { q: "Do I need a CUNY email?", a: "Yes. Only students with a CUNY stu-mail address can create an account, so everyone you meet is a classmate." },
+  {
+    q: "Do I need a CUNY email?",
+    a: "Yes. Only students with a CUNY stu-mail address can create an account, so everyone you meet is a classmate.",
+  },
   { q: "Does it cost anything?", a: "No. Listing and browsing are free." },
-  { q: "Can I see other campuses?", a: "Yes. Open your Profile and turn on Shop other CUNY campuses." },
-  { q: "What happens after I graduate?", a: "Add a backup email in your Profile before you graduate so you can still log in and keep your listings and messages." },
-  { q: "How do I sell something?", a: "Press Post a listing on the Browse page, add a photo, a price and where you can meet." },
+  {
+    q: "Can I see other campuses?",
+    a: "Yes. Open your Profile and turn on Shop other CUNY campuses.",
+  },
+  {
+    q: "What happens after I graduate?",
+    a: "Add a backup email in your Profile before you graduate so you can still log in and keep your listings and messages.",
+  },
+  {
+    q: "How do I sell something?",
+    a: "Press Post a listing on the Browse page, add a photo, a price and where you can meet.",
+  },
 ];
 
 export default function Guide() {
   return (
     <div className="mp-root" id="page-guide">
       <div className="mp-page" style={{ paddingBottom: 24 }}>
-        <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--mp-accent)" }}>
+        <p
+          style={{
+            fontSize: 12,
+            fontWeight: 800,
+            letterSpacing: ".12em",
+            textTransform: "uppercase",
+            color: "var(--mp-accent)",
+          }}
+        >
           A student guide
         </p>
-        <h1 style={{ fontSize: 56, lineHeight: 1.06, marginTop: 8, maxWidth: 640 }}>
-          How <em style={{ color: "var(--mp-accent)" }}>CUNY</em> MarketPlace works
+        <h1
+          style={{
+            fontSize: "clamp(24px, 5.2vw, 56px)",
+            lineHeight: 1.1,
+            marginTop: 8,
+            whiteSpace: "nowrap",
+          }}
+        >
+          How <span style={{ color: "var(--mp-accent)" }}>CUNY</span>{" "}
+          MarketPlace works
         </h1>
         <p style={{ color: "var(--mp-mute)", marginTop: 10, fontSize: 17 }}>
           A quick look at every page and what it does.
@@ -137,10 +178,29 @@ export default function Guide() {
         {/* the four steps */}
         <div className="mp-grid4" style={{ marginTop: 32 }}>
           {STEPS.map((s, i) => (
-            <div key={s.title} className="mp-card" style={{ padding: 22, display: "flex", flexDirection: "column", gap: 8 }}>
-              <span className="mp-bullet" style={{ background: "var(--mp-accent)", color: "var(--mp-cink)" }}>{i + 1}</span>
+            <div
+              key={s.title}
+              className="mp-card"
+              style={{
+                padding: 22,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              <span
+                className="mp-bullet"
+                style={{
+                  background: "var(--mp-accent)",
+                  color: "var(--mp-cink)",
+                }}
+              >
+                {i + 1}
+              </span>
               <b style={{ fontSize: 17 }}>{s.title}</b>
-              <span style={{ color: "var(--mp-mute)", fontSize: 14 }}>{s.text}</span>
+              <span style={{ color: "var(--mp-mute)", fontSize: 14 }}>
+                {s.text}
+              </span>
             </div>
           ))}
         </div>
@@ -148,23 +208,66 @@ export default function Guide() {
         {/* one card per page */}
         <div className="mp-grid3" style={{ marginTop: 28 }}>
           {PAGES.map((page, idx) => (
-            <div key={page.name} className="mp-card" style={{ padding: 24, display: "flex", flexDirection: "column", gap: 10 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--mp-mute)" }}>
+            <div
+              key={page.name}
+              className="mp-card"
+              style={{
+                padding: 24,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: ".1em",
+                  textTransform: "uppercase",
+                  color: "var(--mp-mute)",
+                }}
+              >
                 Page {idx + 1}
                 {page.isNew && (
-                  <span style={{ marginLeft: 8, padding: "2px 8px", borderRadius: 999, background: "var(--mp-accent)", color: "var(--mp-cink)", letterSpacing: 0 }}>
+                  <span
+                    style={{
+                      marginLeft: 8,
+                      padding: "2px 8px",
+                      borderRadius: 999,
+                      background: "var(--mp-accent)",
+                      color: "var(--mp-cink)",
+                      letterSpacing: 0,
+                    }}
+                  >
                     New
                   </span>
                 )}
               </span>
               <h2 style={{ fontSize: 24 }}>{page.name}</h2>
               <p style={{ color: "var(--mp-mute)" }}>{page.lead}</p>
-              <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 6, fontSize: 14 }}>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: 18,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 6,
+                  fontSize: 14,
+                }}
+              >
                 {page.tips.map((t) => (
                   <li key={t}>{t}</li>
                 ))}
               </ul>
-              <Link to={page.to} style={{ marginTop: "auto", paddingTop: 6, fontWeight: 700, color: "var(--mp-accent)" }}>
+              <Link
+                to={page.to}
+                style={{
+                  marginTop: "auto",
+                  paddingTop: 6,
+                  fontWeight: 700,
+                  color: "var(--mp-accent)",
+                }}
+              >
                 Open page →
               </Link>
             </div>
@@ -172,7 +275,10 @@ export default function Guide() {
         </div>
 
         {/* safety */}
-        <div className="mp-card" style={{ marginTop: 28, padding: 26, display: "grid", gap: 10 }}>
+        <div
+          className="mp-card"
+          style={{ marginTop: 28, padding: 26, display: "grid", gap: 10 }}
+        >
           <h2 style={{ fontSize: 24 }}>Stay safe</h2>
           <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 6 }}>
             {SAFETY.map((t) => (
@@ -182,11 +288,19 @@ export default function Guide() {
         </div>
 
         {/* common questions */}
-        <h2 style={{ fontSize: 28, marginTop: 40, marginBottom: 14 }}>Common questions</h2>
+        <h2 style={{ fontSize: 28, marginTop: 40, marginBottom: 14 }}>
+          Common questions
+        </h2>
         <div style={{ display: "grid", gap: 10, maxWidth: 760 }}>
           {FAQ.map((f) => (
-            <details key={f.q} className="mp-card" style={{ padding: "16px 20px", borderRadius: 20 }}>
-              <summary style={{ fontWeight: 700, cursor: "pointer" }}>{f.q}</summary>
+            <details
+              key={f.q}
+              className="mp-card"
+              style={{ padding: "16px 20px", borderRadius: 20 }}
+            >
+              <summary style={{ fontWeight: 700, cursor: "pointer" }}>
+                {f.q}
+              </summary>
               <p style={{ color: "var(--mp-mute)", marginTop: 10 }}>{f.a}</p>
             </details>
           ))}
@@ -194,7 +308,10 @@ export default function Guide() {
 
         <p style={{ marginTop: 32, color: "var(--mp-mute)" }}>
           Ready to try it?{" "}
-          <Link to="/browse" style={{ color: "var(--mp-accent)", fontWeight: 700 }}>
+          <Link
+            to="/browse"
+            style={{ color: "var(--mp-accent)", fontWeight: 700 }}
+          >
             Browse listings
           </Link>
         </p>
