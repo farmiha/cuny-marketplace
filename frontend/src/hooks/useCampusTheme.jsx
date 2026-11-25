@@ -5,14 +5,15 @@ const CampusThemeContext = createContext(null);
 
 export function CampusThemeProvider({ children }) {
   const [campus, setCampus] = useState("all");
+  // first visit always starts in light mode; after that we keep whatever they picked
   const [mode, setMode] = useState(() => {
-    const saved = typeof window !== "undefined" && localStorage.getItem("cuny-market-mode");
-    if (saved) return saved;
-    const prefersDark =
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches;
-    return prefersDark ? "dark" : "light";
+    try {
+      const saved = localStorage.getItem("cuny-market-mode");
+      if (saved === "dark" || saved === "light") return saved;
+    } catch (e) {
+      /* localStorage unavailable, use the default */
+    }
+    return "light";
   });
 
   const theme = CAMPUS_THEMES[campus] || CAMPUS_THEMES.all;
@@ -24,7 +25,10 @@ export function CampusThemeProvider({ children }) {
     root.style.setProperty("--primary-ink", theme.primaryInk);
     root.style.setProperty("--accent", theme.accent);
     root.style.setProperty("--accent-ink", theme.accentInk);
-    root.style.setProperty("--hero-bg", theme.photo ? `url(${theme.photo})` : "none");
+    root.style.setProperty(
+      "--hero-bg",
+      theme.photo ? `url(${theme.photo})` : "none",
+    );
   }, [theme]);
 
   useEffect(() => {
@@ -39,7 +43,9 @@ export function CampusThemeProvider({ children }) {
   const toggleMode = () => setMode((m) => (m === "dark" ? "light" : "dark"));
 
   return (
-    <CampusThemeContext.Provider value={{ campus, setCampus, theme, mode, setMode, toggleMode }}>
+    <CampusThemeContext.Provider
+      value={{ campus, setCampus, theme, mode, setMode, toggleMode }}
+    >
       {children}
     </CampusThemeContext.Provider>
   );
