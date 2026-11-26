@@ -137,6 +137,8 @@ export default function About() {
                 "color-mix(in srgb, var(--mp-accent) 9%, transparent)",
               minWidth: 0,
               flex: "2.2 1 480px",
+              boxShadow:
+                "0 18px 40px -16px rgba(0, 0, 0, 0.28), 0 4px 10px rgba(0, 0, 0, 0.08)",
             }}
           >
             <div>
